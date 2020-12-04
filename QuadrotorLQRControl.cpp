@@ -31,45 +31,72 @@ QuadrotorLQRControl::QuadrotorLQRControl()
        _eq_point(i,0) = 0.0f;
     }
 
-    _eq_point(1,0) =  0.0f; //x
-    _eq_point(3,0) =  0.0f; //y
-    _eq_point(5,0) = -1.0f; //z 
-
-    u_control(0,0) = 0.0f;
-    u_control(1,0) = 0.0f;
-    u_control(2,0) = 0.0f;
-    u_control(3,0) = 0.0f;
-
-    //_K = readMatrixK("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_controller.txt");
-	_K = readMatrixK("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_controller.txt");
-    //_P = readMatrixP("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_pe.txt");
-	_P = readMatrixP("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_pe.txt");
-
-    ff_thrust = 5.886f; // [N]
-
-    _auto_eq_point_flag = true;
-
-    ofstream outfile1;
-     //outfile1.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", std::ios::out);
-	 outfile1.open("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files\control_input.txt", std::ios::out);
+     // _eq_point(1,0) =  0.0f; //x
+     // _eq_point(3,0) =  0.0f; //y
+     // _eq_point(5,0) = -1.0f; //z
+	
+	 // Sliding Mode Control 
+	 _eq_point(1,0) = 0.0f; //x
+     _eq_point(3,0) = 0.0f; //y
+     _eq_point(5,0) = -1.0f; //z 
+	
+	 ux = 0.0f;
+	 uy = 0.0f; 
+	 s1 = 0.0f; 
+	 s2 = 0.0f;
+	 s3 = 0.0f; 
+	 s4 = 0.0f;
+	
+	 sx = 0.0f;
+	 sy = 0.0f;
+	
+	 xd7 = 0.0f;
+	 xd7_dot = 0.0f;
+	 xd7_ddot = 0.0f;
+	 xd7_old = 0.0f;
+	 xd7_dot_old = 0.0f;
 	 
+	 xd8 = 0.0f;
+	 xd8_dot = 0.0f;
+	 xd8_ddot = 0.0f;
+	 xd8_old = 0.0f;
+	 xd8_dot_old = 0.0f;
+	
+
+     u_control(0,0) = 0.0f;
+     u_control(1,0) = 0.0f;
+     u_control(2,0) = 0.0f;
+     u_control(3,0) = 0.0f;
+
+     //_K = readMatrixK("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_controller.txt");
+	 //_K = readMatrixK("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_controller.txt");
+     //_P = readMatrixP("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_pe.txt");
+	 //_P = readMatrixP("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_pe.txt");
+
+     // ff_thrust = 5.886f; // [N]
+
+     _auto_eq_point_flag = true;
+
+     ofstream outfile1;
+     //outfile1.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", std::ios::out);
+	 outfile1.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt");
      outfile1.close();
 
         
      ofstream outfile3;
      //outfile3.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/state.txt", std::ios::out);
-	 outfile3.open("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files\state.txt", std::ios::out);
+	 outfile3.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt");
      outfile3.close();
 
      
      ofstream outfile5;
      //outfile5.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", std::ios::out);
-	 outfile5.open("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files\lyapunov.txt", std::ios::out);
+	 outfile5.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt");
      outfile5.close();
 
-ofstream outfile4;
+     ofstream outfile4;
      //outfile4.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", std::ios::out);
-	 outfile4.open("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files\ekf.txt", std::ios::out);
+	 outfile4.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/ekf.txt");
      outfile4.close();
 
      _past_time = hrt_absolute_time() * 1e-6;
@@ -101,6 +128,7 @@ Matrix <float, 4, 12>  QuadrotorLQRControl::readMatrixK(const char *filename)
     return result;
 
  }
+ 
 
 Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 {
@@ -115,46 +143,159 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
      const hrt_abstime now = hrt_absolute_time();
 
      float _current_time = now *1e-6;
-    // float dt = _current_time-_past_time;
+     float dt = _current_time-_past_time;
+	 
+	 //-------- Sliding Mode Control -------
+	 
+	 xd7_dot = (xd7 - xd7_old)/dt; 
+	 xd8_dot = (xd8 - xd8_old)/dt;
+	 
+	 xd7_ddot = (xd7_dot - xd7_dot_old)/dt; 
+	 xd8_ddot = (xd8_dot - xd8_dot_old)/dt;
+	 
+	 xd7_old = xd7;
+	 xd8_old = xd8;
+	 xd7_dot_old = xd7_dot;
+	 xd8_dot_old = xd8_dot;
      
-    _past_time = _current_time;
+     _past_time = _current_time;
 
-    delta_x   = _current_state - _eq_point;    
-    u_control = - _K*(delta_x); 
+     //delta_x   = _current_state - _eq_point;    
+     //u_control = - _K*(delta_x); 
  
-    delta_x_T = delta_x.transpose();
+     //delta_x_T = delta_x.transpose();
     
-    v_b = delta_x_T*_P;
-    _lyap_fun = v_b*delta_x;
-    //cout<< dt << "\t" << _P(0,0) << "\n";
-   // !! IMPORTANT scale the control inputs.......
+     //v_b = delta_x_T*_P;
+     //_lyap_fun = v_b*delta_x;
+     //cout<< dt << "\t" << _P(0,0) << "\n";
+     // !! IMPORTANT scale the control inputs.......
+   
+     //------------------------ Sliding Mode Control ---------------------------------------
+   
+      
+/* 	   float m = 0.8;
+	   float Ix = 0.005;
+	   float Iy = 0.005;
+	   float Iz = 0.005;
+	   float g = 9.8;
+   
+	   // For Altitude Z
+	   float c1 = 35;
+	   float k1 = 8;
+	   float k2 = 8;
+	   
+	   // For X-axis
+	   float c2 = 1;
+	   float k3 = 0.1;
+	   float k4 = 0.1;
+	   
+	   // For Y-axis
+	   float c3 = 1;
+	   float k5 = 0.1;
+	   float k6 = 0.1;
+	   
+	   // For phi - u2
+	   float c4 = 5;
+	   float k7 = 5;
+	   float k8 = 5;
+	   
+	   // For theta - u3
+	   float c5 = 5;
+	   float k9 = 5;
+	   float k10 = 5;
+	   
+	   // For psi - u4
+	   float c6 = 2;
+	   float k11 = 0.5;	   */
+	   
+	   //Matlab State Order  ---------- 
+	   // x(1) - pos_x    		| _current_state(1,0)
+	   // x2 - pos_y    		| _current_state(3,0)
+	   // x3 - pos_z    		| _current_state(5,0)
+	   // x4 - x_dot 			| _current_state(0,0)
+	   // x5 - y_dot			| _current_state(2,0)
+	   // x6 - z_dot			| _current_state(4,0)
+	   // x7 - roll-phi 		| _current_state(7,0)
+	   // x8 - pitch-theta 		| _current_state(9,0)
+	   // x9 - yaw - psi		| _current_state(11,0)
+	   // x10 - roll_dot		| _current_state(6,0)
+	   // x11 - pitch_dot		| _current_state(8,0)
+	   // x12 - psi_dot 		| _current_state(10,0)
+	   
+	   b1 = l/Jx;
+	   b2 = l/Jy;
+	   b3 = 1/Jz;
+	   a1 = (Jx-Jy)/Jx;
+	   a2 = (Jz-Jx)/Jy;
+	   a3 = (Jx-Jy)/Jz;
+	 
+
+	   s1 = (_eq_point(4,0) - _current_state(4,0)) + c1*(_eq_point(5,0)-_current_state(5,0));
+	   // sx = (_eq_point(0,0) - _current_state(0,0)) + c2*(_eq_point(1,0)-_current_state(1,0));
+	   // sy = (_eq_point(4,0) - _current_state(2,0)) + c3*(_eq_point(3,0)-_current_state(3,0));
+	   //u_control(0,0) = -(m/(cos(x(7))*cos(x(8))))*(k1*sign(s1)+k2*s1+g+c1*(r(6)-x(6)));
+	   
+	   u_control(0,0) = -(m/(cos(_current_state(7,0))*cos(_current_state(9,0))))*(k1*sign(s1)+k2*s1+g+c1*(_eq_point(4,0)-_current_state(4,0)));
+	   
+	   //motion control about x and y axis
+	   // ux = (m/u_control(0,0))*(k3*sign(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
+	   // uy = (m/u_control(0,0)*(k5*sign(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0))));
+	   
+	   // xd7 = (asin(-uy-floor(-uy))) + M_PI*floor(-uy)/2; // desired as functions 
+	   // xd8 = (asin(ux/cos(xd7) - floor(ux/cos(xd7))))+ M_PI*floor(ux/cos(xd7))/2;
+	   
+	   //angular motion control 
+	   // s2 = (xd7_dot-_current_state(6,0)) + c4*(xd7-_current_state(7,0));
+	   // s3 = (xd8_dot-_current_state(8,0)) + c5*(xd8-_current_state(9,0));
+	   
+	   s2 = (0 -_current_state(6,0)) + c4*(0 -_current_state(7,0));
+	   s3 = (0 -_current_state(8,0)) + c5*(0 -_current_state(9,0));
+	   s4 = (0- _current_state(10,0)) + c6*(0-_current_state(11,0));
+	   
+	   // u_control(1,0) = ix*(k8*sign(s2)+k9*s2 + xd7_ddot + c4*(xd7_dot - _current_state(6,0)));
+	   // u_control(2,0) = iy*(k9*sign(s3)+k10*s3 + xd8_ddot + c5*(xd8_dot - _current_state(8,0)));
+	   // u_control(3,0) = iz*(k11*sign(s4)+k12*s4 + c6*(0 -_current_state(10,0)));
+	   
+   	   u_control(1,0) = (1/b1)*(k8*sign(s2)+k9*s2 + a1*_current_state(9,0)*_current_state(10,0) + c4*(0 - _current_state(6,0)));
+	   u_control(2,0) = (1/b2)*(k9*sign(s3)+k10*s3 + a2*_current_state(6,0)*_current_state(10,0) + c5*(0 - _current_state(8,0)));
+	   u_control(3,0) = (1/b3)*(k11*sign(s4)+k12*s4 + a3*_current_state(6,0)*_current_state(9,0) + c6*(0 -_current_state(10,0)));
+	   
+	   //----------------------------- Sliding Mode Control 2.0 Ecuador ----------------------
+	   
+ 
+	  
+	   
+	   
+	   //-----------------------------------------------------------------------------------------
 
 
-    u_control_norm(1,0) = fmin(fmax((u_control(1,0))/(0.1080f*4.0f), -1.0f), 1.0f);  //u2 - roll
-    u_control_norm(2,0) = fmin(fmax((u_control(2,0))/(0.1080f*4.0f),  -1.0f), 1.0f); //u3 - pitch
-    u_control_norm(3,0) = fmin(fmax((u_control(3,0))/(0.1f*1.0f), -1.0f), 1.0f);	 //u4 - yaw
-    u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
+		u_control_norm(1,0) = fmin(fmax((u_control(1,0))/(0.1080f*4.0f), -1.0f), 1.0f);  //u2 - roll
+		u_control_norm(2,0) = fmin(fmax((u_control(2,0))/(0.1080f*4.0f),  -1.0f), 1.0f); //u3 - pitch
+		u_control_norm(3,0) = fmin(fmax((u_control(3,0))/(0.1f*1.0f), -1.0f), 1.0f);	 //u4 - yaw
+	//	u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
+	    u_control_norm(0,0) = fmin(fmax((u_control(0,0))/16.0f, 0.0f), 1.0f);  //u1 - thrust 
 
-   // not normalized control inputs
-     u_control(0,0) = u_control_norm(0,0)*16.0f;
-     u_control(1,0) = u_control_norm(1,0)*4.0f;
-     u_control(2,0) = u_control_norm(2,0)*4.0f;
-     u_control(3,0) = u_control_norm(3,0)*0.05f;
-     
-    //"\t" <<  u_control(0,0)+ff_thrust << "\n";
-         /* Save data*/
-    // writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
-    // writeInputOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
-    // writeLyapunovOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", _lyap_fun(0,0), now); 
-    // writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", _current_state_ekf, now);
-	
-	//------------- Javier-----------------------
-	writeStateOnFile("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files\state.txt", _current_state, now);
-    writeInputOnFile("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files\control_input.txt", u_control_norm, now); 
-    writeLyapunovOnFile("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files\lyapunov.txt", _lyap_fun(0,0), now); 
-    writeStateOnFile("C:\PX4\home\px4_external\src\modules\mc_att_control\output_files/ekf.txt", _current_state_ekf, now);
-    
-    return u_control_norm;    
+
+	   // not normalized control inputs
+		 u_control(0,0) = u_control_norm(0,0)*16.0f;
+		 u_control(1,0) = u_control_norm(1,0)*4.0f;
+		 u_control(2,0) = u_control_norm(2,0)*4.0f;
+		 u_control(3,0) = u_control_norm(3,0)*0.05f;
+		 
+		//"\t" <<  u_control(0,0)+ff_thrust << "\n";
+			 /* Save data*/
+		// writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
+		// writeInputOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
+		// writeLyapunovOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", _lyap_fun(0,0), now); 
+		// writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", _current_state_ekf, now);
+		
+		//------------- Javier-----------------------
+		writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
+		writeInputOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
+		writeLyapunovOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_fileslyapunov.txt", _lyap_fun(0,0), now); 
+		writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_filesekf.txt", _current_state_ekf, now);
+		
+		return u_control_norm;    
 
 }
 
@@ -200,7 +341,7 @@ void QuadrotorLQRControl::setCurrentState(struct vehicle_attitude_s _v_att, stru
       _current_state(8,0)  = _v_att.pitchspeed;                //pitch dot
       _current_state(9,0)  = Eulerf(Quatf(_v_att.q)).theta();  //pitch - theta
       _current_state(10,0) = _v_att.yawspeed;	               // yawdot
-      _current_state(11,0) = Eulerf(Quatf(_v_att.q)).psi();    //yaw
+      _current_state(11,0) = Eulerf(Quatf(_v_att.q)).psi();    //yaw - psi
 
 }
 
@@ -350,3 +491,8 @@ Matrix <float, 12, 12>  QuadrotorLQRControl::readMatrixP(const char *filename)
     return result;
 
  }
+ 
+ int QuadrotorLQRControl::sign(double v) 
+ {
+  return (v > 0) - (v < 0);
+}

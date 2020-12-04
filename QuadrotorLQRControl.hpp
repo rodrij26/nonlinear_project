@@ -74,8 +74,100 @@ private:
 
 
       bool _auto_eq_point_flag;
-     
-      float ff_thrust;
+	  float ff_thrust;
+	  float ux;
+	  float uy; 
+	  float s1; 
+	  float s2;
+	  float s3; 
+	  float s4;
+	 
+	 
+	 //------ SMC - Ecuador --------
+	 
+	 float s_ecuad; 
+	 float kd_z;
+	 float kd_roll;
+	 float kd_pitch;
+	 float kd_yaw; 
+	 
+	 float lambda_z;
+	 float lambda_roll;
+	 float lambda_pitch;
+	 float lambda_yaw;
+	 
+	 float delta_z;
+	 float delta_roll;
+	 float delta_pitch;
+	 float delta_yaw;
+	 
+	 	 
+	 
+	 
+	 //---------------------------
+	
+	 float sx;
+	 float sy;
+	
+	 float xd7;
+	 float xd7_dot;
+	 float xd7_ddot;
+	 float xd7_old;
+	 float xd7_dot_old;
+	 
+	 float xd8;
+	 float xd8_dot;
+	 float xd8_ddot;
+	 float xd8_old;
+	 float xd8_dot_old;
+	 
+	 float b1;
+	 float b2;
+	 float b3;
+	 
+	 float a1;
+	 float a2;
+	 float a3; 
+	 
+	 // Quadcopter Properties
+	 float m = 0.8;
+	 float Jx = 0.005;
+	 float Jy = 0.005;
+	 float Jz = 0.009;
+	 float g = 9.81;
+	 float l = 0.33 / 2;
+
+	 
+	 // For Altitude Z
+	 float c1 = 15;
+	 float k1 = 2;
+	 float k2 = 2;
+	 
+	 // For X-axis
+	 float c2 = 10;
+	 float k3 = 0.1;
+	 float k4 = 0.1;
+   
+   // For Y-axis
+   float c3 = 10;
+   float k5 = 0.1;
+   float k6 = 0.1;
+   
+   // For phi - u2
+   float c4 = 5;
+   float k7 = 0.1;
+   float k8 = 0.1;
+   
+   // For theta - u3
+   float c5 = 20;
+   float k9 = 5;
+   float k10 = 5;
+   
+   // For psi - u4
+   float c6 = 2;
+   float k11 = 0.5;
+   float k12 = 0.5;
+	   
 
       void writeStateOnFile(const char *filename, Matrix <float, 12, 1> vect, hrt_abstime t); 
 
@@ -91,7 +183,7 @@ private:
 
       Matrix<float,4,1> u_control;
 	  
-	   int sign(double v);
+	 int sign(double v);
       
 
 };
