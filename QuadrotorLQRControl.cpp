@@ -36,7 +36,7 @@ QuadrotorLQRControl::QuadrotorLQRControl()
      // _eq_point(5,0) = -1.0f; //z
 	
 	 // Sliding Mode Control 
-	 _eq_point(1,0) = -1.0f; //x
+	 _eq_point(1,0) = -5.0f; //x
      _eq_point(3,0) = -1.0f; //y
      _eq_point(5,0) = -1.0f; //z 
 	
@@ -155,14 +155,18 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	 
 	 xd7_dot = (xd7 - xd7_old)/dt; 
 	 xd8_dot = (xd8 - xd8_old)/dt;
+	 xd9_dot = (xd9 - xd9_old)/dt;
 	 
 	 xd7_ddot = (xd7_dot - xd7_dot_old)/dt; 
 	 xd8_ddot = (xd8_dot - xd8_dot_old)/dt;
+	 xd9_ddot = (xd9_dot - xd9_dot_old)/dt;
 	 
 	 xd7_old = xd7;
 	 xd8_old = xd8;
+	 xd9_old = xd9;
 	 xd7_dot_old = xd7_dot;
 	 xd8_dot_old = xd8_dot;
+	 xd9_dot_old = xd9_dot;
      
      _past_time = _current_time;
 
@@ -241,18 +245,23 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	   uy = (m/u_control(0,0)*(k5*sign(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0)))); */
 	   
 	   ux = (m/u_control(0,0))*(k3*sat(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
-	   uy = (m/u_control(0,0)*(k5*sat(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0))));
+	   uy = (m/u_control(0,0))*(k5*sat(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0)));
+	   //ux = sat(ux);
+	   //uy = sat(uy);
 	   
-	   xd7 = (asin(uy-floor(uy))) + M_PI*floor(uy)/2; // desired as functions 
-	   xd8 = (asin(-ux/cos(xd7) - floor(-ux/cos(xd7))))+ M_PI*floor(-ux/cos(xd7))/2;
+	   //xd7 = (asin(uy-floor(uy))); //+ M_PI*floor(uy)/2; // desired as functions 
+	   //xd8 = (asin(-ux/cos(xd7) - floor(-ux/cos(xd7))));//+ M_PI*floor(-ux/cos(xd7))/2;
 /* 	   xd7 = (asin(ux-floor(ux))) + M_PI*floor(ux)/2; // desired as functions 
 	   xd8 = (asin(-uy/cos(xd7) - floor(-uy/cos(xd7))))+ M_PI*floor(-uy/cos(xd7))/2; */
+	   xd7 = asin((ux*sin(_current_state(11,0))) - (uy*cos(_current_state(11,0))));
+	   xd8 = asin(((ux*cos(xd9)) - (uy*sin(xd9)))/cos(xd9));
+	   xd9 = atan((_eq_point(2,0)-_current_state(2,0))/(_eq_point(0,0)-_current_state(0,0)));
 	   
 	   
 	   //angular motion control 
 	   s2 = (xd7_dot-_current_state(6,0)) + c4*(xd7-_current_state(7,0));
 	   s3 = (xd8_dot-_current_state(8,0)) + c5*(xd8-_current_state(9,0));
-	   s4 = (0-_current_state(10,0)) + c6*(0-_current_state(11,0));
+	   s4 = (xd9_dot-_current_state(10,0)) + c6*(xd9-_current_state(11,0));
 	   
 	   //
 /* 	   u_control(1,0) = Ix*(k8*sign(s2)+k9*s2 + xd7_ddot + c4*(xd7_dot - _current_state(6,0)));
@@ -261,7 +270,7 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	   
 	   u_control(1,0) = Ix*(k8*sat(s2)+k9*s2 + xd7_ddot + c4*(xd7_dot - _current_state(6,0)));
 	   u_control(2,0) = Iy*(k9*sat(s3)+k10*s3 + xd8_ddot + c5*(xd8_dot - _current_state(8,0)));
-	   u_control(3,0) = Iz*(k11*sat(s4)+k12*s4 + c6*(0 -_current_state(10,0)));
+	   u_control(3,0) = Iz*(k11*sat(s4)+k12*s4 + c6*(xd9_dot -_current_state(10,0)));
 
 
 	 

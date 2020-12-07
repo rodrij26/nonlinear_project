@@ -98,41 +98,46 @@ private:
 	 float xd8_old;
 	 float xd8_dot_old;
 	 
-		float m = 0.6;
-	   float Ix = 0.0092;
-	   float Iy = 0.0092;
-	   float Iz = 0.0101;
+	 float xd9;
+	 float xd9_dot;
+	 float xd9_ddot;
+	 float xd9_old;
+	 float xd9_dot_old;
+		float m = 0.8;
+	   float Ix = 0.005;
+	   float Iy = 0.005;
+	   float Iz = 0.009;
 	   float g = 9.81;
    
 	   // For Altitude Z
 	   float c1 = 68;
 	   float k1 = 25;
-	   float k2 = 25/0.3;
+	   float k2 = 10;
 	   
 	   // For X-axis
-	   float c2 = 2;
-	   float k3 = 0.1;
-	   float k4 = 0.1/0.3;
+	   float c2 = 1;//2;
+	   float k3 = 0.1;//0.1;
+	   float k4 = 0.1; //0.1/0.3;
 	   
 	   // For Y-axis
-	   float c3 = 2;
-	   float k5 = 0.1;
-	   float k6 = 0.1/0.3;
+	   float c3 = 1;//2;
+	   float k5 = 0.1;//0.1;
+	   float k6 = 0.1;//0.1/0.3;
 	   
 	   // For phi - u2
 	   float c4 = 5;
 	   float k7 = 100;
-	   float k8 = 100/0.3;
+	   float k8 = 50;
 	   
 	   // For theta - u3
 	   float c5 = 5;
 	   float k9 = 100;
-	   float k10 = 100/0.3;
+	   float k10 = 10;
 	   
 	   // For psi - u4
 	   float c6 = 5;
 	   float k11 = 100;
-	   float k12 = 100/0.3;
+	   float k12 = 10;
 	   
 
       void writeStateOnFile(const char *filename, Matrix <float, 12, 1> vect, hrt_abstime t); 
