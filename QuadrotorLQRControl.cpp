@@ -146,6 +146,12 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
      float dt = _current_time-_past_time;
 	 
 	 //-------- Sliding Mode Control -------
+/* 	 _eq_point(0,0) = (-4.0f*pow((_current_time),3))*exp(-pow((_current_time),4)); //xdot
+	 _eq_point(1,0) = -1.0f + exp(-pow((_current_time),4)); //x
+	 _eq_point(2,0) = (-4.0f*pow((_current_time),3))*exp(-pow((_current_time),4)); //ydot
+     _eq_point(3,0) = -1.0f + exp(-pow((_current_time),4)); //y
+	 _eq_point(4,0) = (-4.0f*pow((_current_time),3))*exp(-pow((_current_time),4)); //zdot
+     _eq_point(5,0) = -1.0f + exp(-pow((_current_time),4)); //z  */
 	 
 	 xd7_dot = (xd7 - xd7_old)/dt; 
 	 xd8_dot = (xd8 - xd8_old)/dt;
@@ -231,11 +237,17 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	   u_control(0,0) = -(m/(cos(_current_state(7,0))*cos(_current_state(9,0))))*(k1*sign(s1)+k2*s1+g+c1*(_eq_point(4,0)-_current_state(4,0)));
 	   
 	   //motion control about x and y axis
-	   ux = (m/u_control(0,0))*(k3*sign(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
-	   uy = (m/u_control(0,0)*(k5*sign(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0))));
+/* 	   ux = (m/u_control(0,0))*(k3*sign(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
+	   uy = (m/u_control(0,0)*(k5*sign(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0)))); */
 	   
-	   xd7 = (asin(-uy-floor(-uy))) + M_PI*floor(-uy)/2; // desired as functions 
-	   xd8 = (asin(ux/cos(xd7) - floor(ux/cos(xd7))))+ M_PI*floor(ux/cos(xd7))/2;
+	   ux = (m/u_control(0,0))*(k3*sat(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
+	   uy = (m/u_control(0,0)*(k5*sat(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0))));
+	   
+	   xd7 = (asin(uy-floor(uy))) + M_PI*floor(uy)/2; // desired as functions 
+	   xd8 = (asin(-ux/cos(xd7) - floor(-ux/cos(xd7))))+ M_PI*floor(-ux/cos(xd7))/2;
+/* 	   xd7 = (asin(ux-floor(ux))) + M_PI*floor(ux)/2; // desired as functions 
+	   xd8 = (asin(-uy/cos(xd7) - floor(-uy/cos(xd7))))+ M_PI*floor(-uy/cos(xd7))/2; */
+	   
 	   
 	   //angular motion control 
 	   s2 = (xd7_dot-_current_state(6,0)) + c4*(xd7-_current_state(7,0));
@@ -243,9 +255,14 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	   s4 = (0-_current_state(10,0)) + c6*(0-_current_state(11,0));
 	   
 	   //
-	   u_control(1,0) = Ix*(k8*sign(s2)+k9*s2 + xd7_ddot + c4*(xd7_dot - _current_state(6,0)));
+/* 	   u_control(1,0) = Ix*(k8*sign(s2)+k9*s2 + xd7_ddot + c4*(xd7_dot - _current_state(6,0)));
 	   u_control(2,0) = Iy*(k9*sign(s3)+k10*s3 + xd8_ddot + c5*(xd8_dot - _current_state(8,0)));
-	   u_control(3,0) = Iz*(k11*sign(s4)+k12*s4 + c6*(0 -_current_state(10,0)));
+	   u_control(3,0) = Iz*(k11*sign(s4)+k12*s4 + c6*(0 -_current_state(10,0))); */
+	   
+	   u_control(1,0) = Ix*(k8*sat(s2)+k9*s2 + xd7_ddot + c4*(xd7_dot - _current_state(6,0)));
+	   u_control(2,0) = Iy*(k9*sat(s3)+k10*s3 + xd8_ddot + c5*(xd8_dot - _current_state(8,0)));
+	   u_control(3,0) = Iz*(k11*sat(s4)+k12*s4 + c6*(0 -_current_state(10,0)));
+
 
 	 
 	  
@@ -256,14 +273,15 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 
 		u_control_norm(1,0) = fmin(fmax((u_control(1,0))/(0.1080f*4.0f), -1.0f), 1.0f);  //u2 - roll
 		u_control_norm(2,0) = fmin(fmax((u_control(2,0))/(0.1080f*4.0f),  -1.0f), 1.0f); //u3 - pitch
-		u_control_norm(3,0) = fmin(fmax((u_control(3,0))/(0.1f*1.0f), -1.0f), 1.0f);	 //u4 - yaw
-		u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
+		u_control_norm(3,0) = fmin(fmax((u_control(3,0))/(0.1f*4.0f), -1.0f), 1.0f);	 //u4 - yaw
+		//u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
+		u_control_norm(0,0) = fmin(fmax((u_control(0,0))/16.0f, 0.0f), 1.0f);  //u1 - thrust 
 
 	   // not normalized control inputs
 		 u_control(0,0) = u_control_norm(0,0)*16.0f;
 		 u_control(1,0) = u_control_norm(1,0)*4.0f;
 		 u_control(2,0) = u_control_norm(2,0)*4.0f;
-		 u_control(3,0) = u_control_norm(3,0)*0.05f;
+		 u_control(3,0) = u_control_norm(3,0)*4.0f;
 		 
 		//"\t" <<  u_control(0,0)+ff_thrust << "\n";
 			 /* Save data*/
@@ -272,7 +290,7 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 		// writeLyapunovOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", _lyap_fun(0,0), now); 
 		// writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", _current_state_ekf, now);
 		
-		//------------- Javier-----------------------
+		//------------- Siddartha-----------------------
 		writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
 		writeInputOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
 		writeLyapunovOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_fileslyapunov.txt", _lyap_fun(0,0), now); 
@@ -480,4 +498,10 @@ Matrix <float, 12, 12>  QuadrotorLQRControl::readMatrixP(const char *filename)
   return (v > 0) - (v < 0);
 }
 
- 
+float QuadrotorLQRControl::sat(float s) 
+{
+if (fabs(s)<1)
+    return s;
+else if (fabs(s)>1)
+    return sign(s);
+}
