@@ -101,25 +101,30 @@ private:
 	 float delta_pitch;
 	 float delta_yaw;
 	 
-	 	 
-	 
+	 	  
 	 
 	 //---------------------------
 	
 	 float sx;
 	 float sy;
 	
-	 float xd7;
+	 float xd7;//roll 
 	 float xd7_dot;
 	 float xd7_ddot;
 	 float xd7_old;
 	 float xd7_dot_old;
 	 
-	 float xd8;
+	 float xd8; //pitch 
 	 float xd8_dot;
 	 float xd8_ddot;
 	 float xd8_old;
 	 float xd8_dot_old;
+
+	 float xd9; //yaw 
+	 float xd9_dot;
+	 float xd9_ddot;
+	 float xd9_old;
+	 float xd9_dot_old;
 	 
 	 float b1;
 	 float b2;
@@ -144,14 +149,14 @@ private:
 	 float k2 = 10;
 	 
 	 // For X-axis
-	 float c2 = 10;
-	 float k3 = 0.1;
-	 float k4 = 0.1;
+	 float c2 = 0.001;
+	 float k3 = 0.001;
+	 float k4 = 0.001;
 	 
 	 // For Y-axis
-	 float c3 = 10;
-	 float k5 = 0.1;
-	 float k6 = 0.1;
+	 float c3 = 0.001;
+	 float k5 = 0.001;
+	 float k6 = 0.001;
    
 	 // For phi - u2
 	 float c4 = 5; //20
