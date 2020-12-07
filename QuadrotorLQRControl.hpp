@@ -135,38 +135,39 @@ private:
 	 float Jy = 0.005;
 	 float Jz = 0.009;
 	 float g = 9.81;
-	 float l = 0.33 / 2;
+	 float l = 1; //0.33 / 2;
 
 	 
-	 // For Altitude Z
-	 float c1 = 15;
-	 float k1 = 2;
-	 float k2 = 2;
+	// For Altitude Z
+	 float c1 = 68;
+	 float k1 = 25;
+	 float k2 = 10;
 	 
 	 // For X-axis
 	 float c2 = 10;
 	 float k3 = 0.1;
 	 float k4 = 0.1;
+	 
+	 // For Y-axis
+	 float c3 = 10;
+	 float k5 = 0.1;
+	 float k6 = 0.1;
    
-   // For Y-axis
-   float c3 = 10;
-   float k5 = 0.1;
-   float k6 = 0.1;
-   
-   // For phi - u2
-   float c4 = 5;
-   float k7 = 0.1;
-   float k8 = 0.1;
-   
-   // For theta - u3
-   float c5 = 20;
-   float k9 = 5;
-   float k10 = 5;
+	 // For phi - u2
+	 float c4 = 5; //20
+	 float k7 = 100; //5
+	 float k8 = 50; //5
+					 
+	// For theta - u3
+	 float c5 = 5;
+	 float k9 = 100;
+	 float k10 = 10;
    
    // For psi - u4
-   float c6 = 2;
-   float k11 = 0.5;
-   float k12 = 0.5;
+     float c6 = 5; //20
+     float k11 = 100; //5
+     float k12 = 10; //5
+
 	   
 
       void writeStateOnFile(const char *filename, Matrix <float, 12, 1> vect, hrt_abstime t); 
@@ -184,6 +185,8 @@ private:
       Matrix<float,4,1> u_control;
 	  
 	 int sign(double v);
+
+	 float sat(float s);
       
 
 };

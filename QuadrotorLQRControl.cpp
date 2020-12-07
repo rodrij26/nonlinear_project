@@ -38,7 +38,7 @@ QuadrotorLQRControl::QuadrotorLQRControl()
 	 // Sliding Mode Control 
 	 _eq_point(1,0) = 0.0f; //x
      _eq_point(3,0) = 0.0f; //y
-     _eq_point(5,0) = -1.0f; //z 
+     _eq_point(5,0) = -5.0f; //z 
 	
 	 ux = 0.0f;
 	 uy = 0.0f; 
@@ -172,44 +172,9 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
    
      //------------------------ Sliding Mode Control ---------------------------------------
    
-      
-/* 	   float m = 0.8;
-	   float Ix = 0.005;
-	   float Iy = 0.005;
-	   float Iz = 0.005;
-	   float g = 9.8;
-   
-	   // For Altitude Z
-	   float c1 = 35;
-	   float k1 = 8;
-	   float k2 = 8;
-	   
-	   // For X-axis
-	   float c2 = 1;
-	   float k3 = 0.1;
-	   float k4 = 0.1;
-	   
-	   // For Y-axis
-	   float c3 = 1;
-	   float k5 = 0.1;
-	   float k6 = 0.1;
-	   
-	   // For phi - u2
-	   float c4 = 5;
-	   float k7 = 5;
-	   float k8 = 5;
-	   
-	   // For theta - u3
-	   float c5 = 5;
-	   float k9 = 5;
-	   float k10 = 5;
-	   
-	   // For psi - u4
-	   float c6 = 2;
-	   float k11 = 0.5;	   */
 	   
 	   //Matlab State Order  ---------- 
-	   // x(1) - pos_x    		| _current_state(1,0)
+	   // x1 - pos_x    		| _current_state(1,0)
 	   // x2 - pos_y    		| _current_state(3,0)
 	   // x3 - pos_z    		| _current_state(5,0)
 	   // x4 - x_dot 			| _current_state(0,0)
@@ -230,12 +195,10 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	   a3 = (Jx-Jy)/Jz;
 	 
 
-	   s1 = (_eq_point(4,0) - _current_state(4,0)) + c1*(_eq_point(5,0)-_current_state(5,0));
 	   // sx = (_eq_point(0,0) - _current_state(0,0)) + c2*(_eq_point(1,0)-_current_state(1,0));
 	   // sy = (_eq_point(4,0) - _current_state(2,0)) + c3*(_eq_point(3,0)-_current_state(3,0));
 	   //u_control(0,0) = -(m/(cos(x(7))*cos(x(8))))*(k1*sign(s1)+k2*s1+g+c1*(r(6)-x(6)));
-	   
-	   u_control(0,0) = -(m/(cos(_current_state(7,0))*cos(_current_state(9,0))))*(k1*sign(s1)+k2*s1+g+c1*(_eq_point(4,0)-_current_state(4,0)));
+	    
 	   
 	   //motion control about x and y axis
 	   // ux = (m/u_control(0,0))*(k3*sign(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
@@ -247,18 +210,22 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	   //angular motion control 
 	   // s2 = (xd7_dot-_current_state(6,0)) + c4*(xd7-_current_state(7,0));
 	   // s3 = (xd8_dot-_current_state(8,0)) + c5*(xd8-_current_state(9,0));
+
+       s1 = (_eq_point(4, 0) - _current_state(4, 0)) + c1 * (_eq_point(5, 0) - _current_state(5, 0));
+
+       u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
 	   
-	   s2 = (0 -_current_state(6,0)) + c4*(0 -_current_state(7,0));
-	   s3 = (0 -_current_state(8,0)) + c5*(0 -_current_state(9,0));
-	   s4 = (0- _current_state(10,0)) + c6*(0-_current_state(11,0));
+	   s2 = (0 -_current_state(6,0)) + c4*(0 -_current_state(7,0)); //-roll
+	   s3 = (0 -_current_state(8,0)) + c5*(0 -_current_state(9,0)); //-pitch
+	   s4 = (0- _current_state(10,0)) + c6*(0 -_current_state(11,0)); //-yaw
 	   
 	   // u_control(1,0) = ix*(k8*sign(s2)+k9*s2 + xd7_ddot + c4*(xd7_dot - _current_state(6,0)));
 	   // u_control(2,0) = iy*(k9*sign(s3)+k10*s3 + xd8_ddot + c5*(xd8_dot - _current_state(8,0)));
 	   // u_control(3,0) = iz*(k11*sign(s4)+k12*s4 + c6*(0 -_current_state(10,0)));
 	   
-   	   u_control(1,0) = (1/b1)*(k8*sign(s2)+k9*s2 + a1*_current_state(9,0)*_current_state(10,0) + c4*(0 - _current_state(6,0)));
-	   u_control(2,0) = (1/b2)*(k9*sign(s3)+k10*s3 + a2*_current_state(6,0)*_current_state(10,0) + c5*(0 - _current_state(8,0)));
-	   u_control(3,0) = (1/b3)*(k11*sign(s4)+k12*s4 + a3*_current_state(6,0)*_current_state(9,0) + c6*(0 -_current_state(10,0)));
+   	   u_control(1,0) = (1/b1)*(k8* sat(s2)+k9*s2 - a1*_current_state(8,0)*_current_state(10,0) + c4*(0 - _current_state(6,0))); //roll
+	   u_control(2,0) = (1/b2)*(k9* sat(s3)+k10*s3 - a2*_current_state(6,0)*_current_state(10,0) + c5*(0 - _current_state(8,0))); //pitch
+	   u_control(3,0) = (1/b3)*(k11* sat(s4)+k12*s4 - a3*_current_state(6,0)*_current_state(9,0) + c6*(0 -_current_state(10,0))); //yaw
 	   
 	   //----------------------------- Sliding Mode Control 2.0 Ecuador ----------------------
 	   
@@ -271,8 +238,8 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 
 		u_control_norm(1,0) = fmin(fmax((u_control(1,0))/(0.1080f*4.0f), -1.0f), 1.0f);  //u2 - roll
 		u_control_norm(2,0) = fmin(fmax((u_control(2,0))/(0.1080f*4.0f),  -1.0f), 1.0f); //u3 - pitch
-		u_control_norm(3,0) = fmin(fmax((u_control(3,0))/(0.1f*1.0f), -1.0f), 1.0f);	 //u4 - yaw
-	//	u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
+		u_control_norm(3,0) = fmin(fmax((u_control(3,0))/(0.1080f*4.0f), -1.0f), 1.0f);	 //u4 - yaw
+		//u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
 	    u_control_norm(0,0) = fmin(fmax((u_control(0,0))/16.0f, 0.0f), 1.0f);  //u1 - thrust 
 
 
@@ -280,7 +247,7 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 		 u_control(0,0) = u_control_norm(0,0)*16.0f;
 		 u_control(1,0) = u_control_norm(1,0)*4.0f;
 		 u_control(2,0) = u_control_norm(2,0)*4.0f;
-		 u_control(3,0) = u_control_norm(3,0)*0.05f;
+		 u_control(3,0) = u_control_norm(3,0)*4.0f;
 		 
 		//"\t" <<  u_control(0,0)+ff_thrust << "\n";
 			 /* Save data*/
@@ -496,3 +463,12 @@ Matrix <float, 12, 12>  QuadrotorLQRControl::readMatrixP(const char *filename)
  {
   return (v > 0) - (v < 0);
 }
+
+ float QuadrotorLQRControl::sat(float s)
+ {
+     if (fabs(s) < 1)
+         return s;
+     else if (fabs(s) > 1)
+         return sign(s);
+ }
+
