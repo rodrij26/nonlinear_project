@@ -25,309 +25,392 @@ using namespace std;
 QuadrotorLQRControl::QuadrotorLQRControl()
 {
 
-    for (int i=0;i<12;i++)
+    for (int i = 0; i < 12; i++)
     {
-       _current_state(i,0) = 0.0f;
-       _eq_point(i,0) = 0.0f;
+        _current_state(i, 0) = 0.0f;
+        _eq_point(i, 0) = 0.0f;
     }
 
-     // _eq_point(1,0) =  0.0f; //x
-     // _eq_point(3,0) =  0.0f; //y
-     // _eq_point(5,0) = -1.0f; //z
-	
-	 // Sliding Mode Control 
-	 _eq_point(1,0) = 0.0f; //x
-     _eq_point(3,0) = 0.0f; //y
-     _eq_point(5,0) = -5.0f; //z 
+    // _eq_point(1,0) =  0.0f; //x
+    // _eq_point(3,0) =  0.0f; //y
+    // _eq_point(5,0) = -1.0f; //z
 
-	
-	 ux = 0.0f;
-	 uy = 0.0f; 
-	 s1 = 0.0f; 
-	 s2 = 0.0f;
-	 s3 = 0.0f; 
-	 s4 = 0.0f;
-	
-	 sx = 0.0f;
-	 sy = 0.0f;
-	
-	 xd7 = 0.0f;
-	 xd7_dot = 0.0f;
-	 xd7_ddot = 0.0f;
-	 xd7_old = 0.0f;
-	 xd7_dot_old = 0.0f;
-	 
-	 xd8 = 0.0f;
-	 xd8_dot = 0.0f;
-	 xd8_ddot = 0.0f;
-	 xd8_old = 0.0f;
-	 xd8_dot_old = 0.0f;
+    // Sliding Mode Control 
+    _eq_point(1, 0) = 0.0f; //x
+    _eq_point(3, 0) = 0.0f; //y
+    _eq_point(5, 0) = -1.0f; //z 
 
 
-     xd9 = 0.0f;
-     xd9_dot = 0.0f;
-     xd9_ddot = 0.0f;
-     xd9_old = 0.0f;
-     xd9_dot_old = 0.0f;
-	
+    ux = 0.0f;
+    uy = 0.0f;
+    s1 = 0.0f;
+    s2 = 0.0f;
+    s3 = 0.0f;
+    s4 = 0.0f;
 
-     u_control(0,0) = 0.0f;
-     u_control(1,0) = 0.0f;
-     u_control(2,0) = 0.0f;
-     u_control(3,0) = 0.0f;
+    sx = 0.0f;
+    sy = 0.0f;
 
-     //_K = readMatrixK("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_controller.txt");
-	 //_K = readMatrixK("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_controller.txt");
-     //_P = readMatrixP("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_pe.txt");
-	 //_P = readMatrixP("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_pe.txt");
+    xd7 = 0.0f;
+    xd7_dot = 0.0f;
+    xd7_ddot = 0.0f;
+    xd7_old = 0.0f;
+    xd7_dot_old = 0.0f;
 
-     // ff_thrust = 5.886f; // [N]
+    xd8 = 0.0f;
+    xd8_dot = 0.0f;
+    xd8_ddot = 0.0f;
+    xd8_old = 0.0f;
+    xd8_dot_old = 0.0f;
 
-     _auto_eq_point_flag = true;
 
-     ofstream outfile1;
-     //outfile1.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", std::ios::out);
-	 outfile1.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt");
-     outfile1.close();
+    xd9 = 0.0f;
+    xd9_dot = 0.0f;
+    xd9_ddot = 0.0f;
+    xd9_old = 0.0f;
+    xd9_dot_old = 0.0f;
 
-        
-     ofstream outfile3;
-     //outfile3.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/state.txt", std::ios::out);
-	 outfile3.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt");
-     outfile3.close();
 
-     
-     ofstream outfile5;
-     //outfile5.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", std::ios::out);
-	 outfile5.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt");
-     outfile5.close();
+    u_control(0, 0) = 0.0f;
+    u_control(1, 0) = 0.0f;
+    u_control(2, 0) = 0.0f;
+    u_control(3, 0) = 0.0f;
 
-     ofstream outfile4;
-     //outfile4.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", std::ios::out);
-	 outfile4.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/ekf.txt");
-     outfile4.close();
+    //_K = readMatrixK("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_controller.txt");
+    //_K = readMatrixK("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_controller.txt");
+    //_P = readMatrixP("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_pe.txt");
+    //_P = readMatrixP("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_pe.txt");
 
-     _past_time = hrt_absolute_time() * 1e-6;
+    // ff_thrust = 5.886f; // [N]
+
+    _auto_eq_point_flag = true;
+
+    ofstream outfile1;
+    //outfile1.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", std::ios::out);
+    outfile1.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt");
+    outfile1.close();
+
+
+    ofstream outfile3;
+    //outfile3.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/state.txt", std::ios::out);
+    outfile3.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt");
+    outfile3.close();
+
+
+    ofstream outfile5;
+    //outfile5.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", std::ios::out);
+    outfile5.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt");
+    outfile5.close();
+
+    ofstream outfile4;
+    //outfile4.open("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", std::ios::out);
+    outfile4.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/ekf.txt");
+    outfile4.close();
+
+    _past_time = hrt_absolute_time() * 1e-6;
 
 }
 
 
 
-Matrix <float, 4, 12>  QuadrotorLQRControl::readMatrixK(const char *filename)
-    {
+Matrix <float, 4, 12>  QuadrotorLQRControl::readMatrixK(const char* filename)
+{
 
     static Matrix <float, 4, 12> result;
     static int rows = 4;
     static int cols = 12;
     ifstream infile;
     infile.open(filename);
-    if (infile.is_open()){
-         for (int i=0; i<rows;i++){
-    		string line;
-    		getline(infile, line);
-    		stringstream stream(line);
-    		for (int j=0; j<cols; j++){
-    			stream >> result(i,j);
-    		}
+    if (infile.is_open()) {
+        for (int i = 0; i < rows; i++) {
+            string line;
+            getline(infile, line);
+            stringstream stream(line);
+            for (int j = 0; j < cols; j++) {
+                stream >> result(i, j);
+            }
 
-    	}
-    	infile.close();
-    }else cout << "Unable to open file";
+        }
+        infile.close();
+    }
+    else cout << "Unable to open file";
     return result;
 
- }
- 
+}
 
-Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
+
+Matrix<float, 4, 1> QuadrotorLQRControl::LQRcontrol()
 {
-       
-     
-     //static Matrix<float,4,1> u_control;
-     static Matrix<float,4,1> u_control_norm;
-     static Matrix<float,12,1> delta_x;
-     static Matrix<float, 1,12> v_b;
-     static Matrix<float,1,12> delta_x_T;
-     static Matrix<float,1,1> _lyap_fun;     
-     const hrt_abstime now = hrt_absolute_time();
 
-     float _current_time = now *1e-6;
-     float dt = _current_time-_past_time;
-	 
-	 //-------- Sliding Mode Control -------
-	 
-	 xd7_dot = (xd7 - xd7_old)/dt; 
-	 xd8_dot = (xd8 - xd8_old)/dt;
-     xd9_dot = (xd9 - xd9_old) / dt;
-	 
-	 xd7_ddot = (xd7_dot - xd7_dot_old)/dt; 
-	 xd8_ddot = (xd8_dot - xd8_dot_old)/dt;
-     xd9_ddot = (xd9_dot - xd9_dot_old)/dt;
-	 
-	 xd7_old = xd7;
-	 xd8_old = xd8;
-     xd9_old = xd9;
 
-	 xd7_dot_old = xd7_dot;
-	 xd8_dot_old = xd8_dot;
-     xd9_dot_old = xd9_dot;
-     
-     _past_time = _current_time;
+    //static Matrix<float,4,1> u_control;
+    static Matrix<float, 4, 1> u_control_norm;
+    static Matrix<float, 12, 1> delta_x;
+    static Matrix<float, 1, 12> v_b;
+    static Matrix<float, 1, 12> delta_x_T;
+    static Matrix<float, 1, 1> _lyap_fun;
+    const hrt_abstime now = hrt_absolute_time();
 
-     //delta_x   = _current_state - _eq_point;    
-     //u_control = - _K*(delta_x); 
- 
-     //delta_x_T = delta_x.transpose();
-    
-     //v_b = delta_x_T*_P;
-     //_lyap_fun = v_b*delta_x;
-     //cout<< dt << "\t" << _P(0,0) << "\n";
-     // !! IMPORTANT scale the control inputs.......
-   
-     //------------------------ Sliding Mode Control ---------------------------------------
-   
-	   
-	   //Matlab State Order  ---------- 
-	   // x1 - pos_x    		| _current_state(1,0)
-	   // x2 - pos_y    		| _current_state(3,0)
-	   // x3 - pos_z    		| _current_state(5,0)
-	   // x4 - x_dot 			| _current_state(0,0)
-	   // x5 - y_dot			| _current_state(2,0)
-	   // x6 - z_dot			| _current_state(4,0)
-	   // x7 - roll-phi 		| _current_state(7,0)
-	   // x8 - pitch-theta 		| _current_state(9,0)
-	   // x9 - yaw - psi		| _current_state(11,0)
-	   // x10 - roll_dot		| _current_state(6,0)
-	   // x11 - pitch_dot		| _current_state(8,0)
-	   // x12 - psi_dot 		| _current_state(10,0)
+    float _current_time = now * 1e-6;
+    float dt = _current_time - _past_time;
+
+    if (dt > 0.010)
+        dt = 0.004;
+
+
+    //------- reference generator ----------
+
+    generateRef(time_ref); //initialize at zero
+
+    ref_x = _ref_points(0, 0);
+    _eq_point(1, 0) = ref_x;
+
+    ref_y = _ref_points(1, 0);
+    _eq_point(3, 0) = ref_y;
+
+    ref_z = _ref_points(2, 0);
+    _eq_point(5, 0) = ref_z;
+
+    //cout << "time: " << time_ref <<", ref_x: " << ref_x << ", ref_y: " << ref_y << ", ref_z: " << ref_z << "\n";
+   // cout << "-------------------------------------------------------------" << "\n \n";
+
+    ref_xdot = (ref_x - ref_x_old) / dt;
+    _eq_point(0, 0) = ref_xdot;
+
+    ref_ydot = (ref_y - ref_y_old) / dt;
+    _eq_point(2, 0) = ref_ydot;
+
+    ref_zdot = (ref_z - ref_z_old) / dt;
+    _eq_point(4, 0) = ref_zdot;
+
+    ref_xddot = (ref_xdot - ref_xdot_old) / dt; //x
+    ref_yddot = (ref_ydot - ref_ydot_old) / dt; //y
+    ref_zddot = (ref_zdot - ref_zdot_old) / dt; //z
+
+    ref_x_old = ref_x;
+    ref_y_old = ref_y;
+    ref_z_old = ref_z;
+
+    ref_xdot_old = ref_xdot;
+    ref_ydot_old = ref_ydot;
+    ref_zdot_old = ref_zdot;
 
 
 
 
-     //-------------------- SMC with Motion Control ----------------------------------------
-	   
-	   b1 = l/Jx;
-	   b2 = l/Jy;
-	   b3 = 1/Jz;
+    //-------- Sliding Mode Control -------
 
-	   a1 = (Jx-Jy)/Jx;
-	   a2 = (Jz-Jx)/Jy;
-	   a3 = (Jx-Jy)/Jz;
+    xd7_dot = (xd7 - xd7_old) / dt;
+    xd8_dot = (xd8 - xd8_old) / dt;
+    xd9_dot = (xd9 - xd9_old) / dt;
 
-       s1 = (_eq_point(4,0) - _current_state(4,0)) + c1*(_eq_point(5,0) - _current_state(5,0));
-       
-       sx = (_eq_point(0,0) - _current_state(0,0)) + c2*(_eq_point(1,0)-_current_state(1,0));
-	   sy = (_eq_point(4,0) - _current_state(2,0)) + c3*(_eq_point(3,0)-_current_state(3,0));
+    xd7_ddot = (xd7_dot - xd7_dot_old) / dt;
+    xd8_ddot = (xd8_dot - xd8_dot_old) / dt;
+    xd9_ddot = (xd9_dot - xd9_dot_old) / dt;
 
-	   //u_control(0,0) = -(m/(cos(x(7))*cos(x(8))))*(k1*sign(s1)+k2*s1+g+c1*(r(6)-x(6)));
+    xd7_old = xd7;
+    xd8_old = xd8;
+    xd9_old = xd9;
 
-       // 
-	   
-	   //motion control about x and y axis
+    xd7_dot_old = xd7_dot;
+    xd8_dot_old = xd8_dot;
+    xd9_dot_old = xd9_dot;
 
-       ux = -(m/u_control(0,0))*(k3*sat(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
-       uy = -(m/u_control(0,0))*(k5*sat(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0)));
-             
-       xd7 = asin(ux * sin(_current_state(11, 0)) - uy * cos(_current_state(11, 0)));
-       xd8 = asin((ux * cos(xd9) - uy * sin(xd9)) / (cos(xd7)));
-       xd9 = atan((_eq_point(3, 0) - _current_state(3, 0)) / (_eq_point(1, 0) - _current_state(1, 0)));
+    _past_time = _current_time;
 
-       //cout << "xd7: " << xd7 << ", xd8: " << xd8 << ", xd9: " << xd9 << "\n";
-       //cout << "xd7_dot: " << xd7_dot << ", xd8_dot: " << xd8_dot << ", xd9_dot: " << xd9_dot << "\n";
-       //cout << "xd7_ddot: " << xd7_ddot  << ", xd8_ddot: " << xd8_ddot << ", xd9_ddot: " << xd9_ddot  << "\n";
-       //cout << "------------------------------------------------------------------- " << "\n \n";
-    
+    time_ref = old_time_ref + dt;
+    old_time_ref = time_ref;
 
-       //ux = sat(ux);
-       //uy = sat(uy);
+    //delta_x   = _current_state - _eq_point;    
+    //u_control = - _K*(delta_x); 
 
-       //xd7 = (asin(uy)); //+ m_pi*floor(uy)/2; // desired as functions 
-       //xd8 = (asin(-ux / cos(xd7))); //+ m_pi*floor(-ux/cos(xd7))/2;
+    //delta_x_T = delta_x.transpose();
 
-       //cout << "xd7: " << xd7 << "\n" ;
-	   
-	   //angular motion control --- s = e_dot + c*e
-       s2 = (xd7_dot-_current_state(6,0)) + c4*(xd7-_current_state(7,0));
-       s3 = (xd8_dot-_current_state(8,0)) + c5*(xd8-_current_state(9,0));
-       s4 = (xd9_dot-_current_state(10,0)) + c6*(xd9-_current_state(11,0));
-            
-	
+    //v_b = delta_x_T*_P;
+    //_lyap_fun = v_b*delta_x;
+    //cout<< dt << "\t" << _P(0,0) << "\n";
+    // !! IMPORTANT scale the control inputs.......
 
-       u_control(0,0) = -(m/(cos(_current_state(7,0)) * cos(_current_state(9, 0)))) * (k1*sat(s1) + k2*s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
-   	   u_control(1,0) = (1/b1)*(k8*sat(s2) + k9*s2 + xd7_ddot - a1*_current_state(8,0)*_current_state(10,0) + c4*(xd7_dot - _current_state(6,0))); //roll
-	   u_control(2,0) = (1/b2)*(k9*sat(s3) + k10*s3 + xd8_ddot - a2*_current_state(6,0)*_current_state(10,0) + c5*(xd8_dot - _current_state(8,0))); //pitch
-	   u_control(3,0) = (1/b3)*(k11*sat(s4) + k12*s4 + xd9_ddot - a3*_current_state(6,0)*_current_state(9,0) + c6*(xd9_dot -_current_state(10,0))); //yaw
-
-	   
-	   //------------------------- Sliding Mode Control - Hovering Only -----------------------
-
-       //s2 = (0 - _current_state(6, 0)) + c4 * (0 - _current_state(7, 0));
-       //s3 = (0 - _current_state(8, 0)) + c5 * (0 - _current_state(9, 0));
-       //s4 = (0 - _current_state(10, 0)) + c6 * (0 - _current_state(11, 0));
+    //------------------------ Sliding Mode Control ---------------------------------------
 
 
-       //u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
-       //u_control(1, 0) = (1 / b1) * (k8 * sat(s2) + k9 * s2  - a1 * _current_state(8, 0) * _current_state(10, 0) + c4 * (_eq_point(6, 0) - _current_state(6, 0))); //roll
-       //u_control(2, 0) = (1 / b2) * (k9 * sat(s3) + k10 * s3  - a2 * _current_state(6, 0) * _current_state(10, 0) + c5 * (_eq_point(8, 0) - _current_state(8, 0))); //pitch
-       //u_control(3, 0) = (1 / b3) * (k11 * sat(s4) + k12 * s4  - a3 * _current_state(6, 0) * _current_state(9, 0) + c6 * (_eq_point(10, 0) - _current_state(10, 0))); //yaw
+      //Matlab State Order  ---------- 
+      // x1 - pos_x    		| _current_state(1,0)
+      // x2 - pos_y    		| _current_state(3,0)
+      // x3 - pos_z    		| _current_state(5,0)
+      // x4 - x_dot 			| _current_state(0,0)
+      // x5 - y_dot			| _current_state(2,0)
+      // x6 - z_dot			| _current_state(4,0)
+      // x7 - roll-phi 		| _current_state(7,0)
+      // x8 - pitch-theta 		| _current_state(9,0)
+      // x9 - yaw - psi		| _current_state(11,0)
+      // x10 - roll_dot		| _current_state(6,0)
+      // x11 - pitch_dot		| _current_state(8,0)
+      // x12 - psi_dot 		| _current_state(10,0)
 
 
 
 
-       //----------------------------------------------------------------------------------------
+    //-------------------- SMC with Motion Control ----------------------------------------
+
+    //b1 = l / Jx;
+    //b2 = l / Jy;
+    //b3 = 1 / Jz;
+
+    //a1 = (Jx - Jy) / Jx;
+    //a2 = (Jz - Jx) / Jy;
+    //a3 = (Jx - Jy) / Jz;
+
+    //s1 = (_eq_point(4, 0) - _current_state(4, 0)) + c1 * (_eq_point(5, 0) - _current_state(5, 0));
+
+    //sx = (_eq_point(0, 0) - _current_state(0, 0)) + c2 * (_eq_point(1, 0) - _current_state(1, 0));
+    //sy = (_eq_point(4, 0) - _current_state(2, 0)) + c3 * (_eq_point(3, 0) - _current_state(3, 0));
+
+    //u_control(0,0) = -(m/(cos(x(7))*cos(x(8))))*(k1*sign(s1)+k2*s1+g+c1*(r(6)-x(6)));
+
+    // 
+
+    //motion control about x and y axis
+
+    //ux = -(m / u_control(0, 0)) * (k3 * sat(sx) + k4 * sx + c2 * (_eq_point(0, 0) - _current_state(0, 0)));
+    //uy = -(m / u_control(0, 0)) * (k5 * sat(sy) + k6 * sy + c3 * (_eq_point(2, 0) - _current_state(2, 0)));+
 
 
-		u_control_norm(1,0) = fmin(fmax((u_control(1,0))/(0.1080f*4.0f), -1.0f), 1.0f);  //u2 - roll
-		u_control_norm(2,0) = fmin(fmax((u_control(2,0))/(0.1080f*4.0f),  -1.0f), 1.0f); //u3 - pitch
-		u_control_norm(3,0) = fmin(fmax((u_control(3,0))/(0.1080f*4.0f), -1.0f), 1.0f);	 //u4 - yaw
-		//u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
-	    u_control_norm(0,0) = fmin(fmax((u_control(0,0))/16.0f, 0.0f), 1.0f);  //u1 - thrust 
 
 
-	   // not normalized control inputs
-		 u_control(0,0) = u_control_norm(0,0)*16.0f;
-		 u_control(1,0) = u_control_norm(1,0)*4.0f;
-		 u_control(2,0) = u_control_norm(2,0)*4.0f;
-		 u_control(3,0) = u_control_norm(3,0)*4.0f;
-		 
-		//"\t" <<  u_control(0,0)+ff_thrust << "\n";
-			 /* Save data*/
-		// writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
-		// writeInputOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
-		// writeLyapunovOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", _lyap_fun(0,0), now); 
-		// writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", _current_state_ekf, now);
-		
-		//------------- Javier-----------------------
-		writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
-		writeInputOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
-		writeLyapunovOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_fileslyapunov.txt", _lyap_fun(0,0), now); 
-		writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_filesekf.txt", _current_state_ekf, now);
-		
-		return u_control_norm;    
+
+    //xd7 = asin(ux * sin(_current_state(11, 0)) - uy * cos(_current_state(11, 0)));                               //phi desired
+    //xd8 = asin((ux * cos(xd9) - uy * sin(xd9)) / (cos(xd7)));                                                    //theta desired
+    //xd9 = atan((_eq_point(3, 0) - _current_state(3, 0)) / (_eq_point(1, 0) - _current_state(1, 0)));             //psi desired
+
+    //cout << "xd7: " << xd7 << ", xd8: " << xd8 << ", xd9: " << xd9 << "\n";
+    //cout << "xd7_dot: " << xd7_dot << ", xd8_dot: " << xd8_dot << ", xd9_dot: " << xd9_dot << "\n";
+    //cout << "xd7_ddot: " << xd7_ddot  << ", xd8_ddot: " << xd8_ddot << ", xd9_ddot: " << xd9_ddot  << "\n";
+    //cout << "------------------------------------------------------------------- " << "\n \n";
+
+
+    //ux = sat(ux);
+    //uy = sat(uy);
+
+    //xd7 = (asin(uy)); //+ m_pi*floor(uy)/2; // desired as functions 
+    //xd8 = (asin(-ux / cos(xd7))); //+ m_pi*floor(-ux/cos(xd7))/2;
+
+    //cout << "xd7: " << xd7 << "\n" ;
+
+    //angular motion control --- s = e_dot + c*e
+    //s2 = (xd7_dot - _current_state(6, 0)) + c4 * (xd7 - _current_state(7, 0));
+    //s3 = (xd8_dot - _current_state(8, 0)) + c5 * (xd8 - _current_state(9, 0));
+    //s4 = (xd9_dot - _current_state(10, 0)) + c6 * (xd9 - _current_state(11, 0));
+
+
+
+    //u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
+    //u_control(1, 0) = (1 / b1) * (-k7 * sat(s2) + k9 * s2 + xd7_ddot - a1 * _current_state(8, 0) * _current_state(10, 0) + c4 * (xd7_dot - _current_state(6, 0))); //roll
+    //u_control(2, 0) = (1 / b2) * (-k9 * sat(s3) + k10 * s3 + xd8_ddot - a2 * _current_state(6, 0) * _current_state(10, 0) + c5 * (xd8_dot - _current_state(8, 0))); //pitch
+    //u_control(3, 0) = (1 / b3) * (-k11 * sat(s4) + k12 * s4 + xd9_ddot - a3 * _current_state(6, 0) * _current_state(9, 0) + c6 * (xd9_dot - _current_state(10, 0))); //yaw
+
+
+    //-------------------------- Sliding Mode Control Functional ---------------------------
+
+    b1 = l / Jx;
+    b2 = l / Jy;
+    b3 = 1 / Jz;
+
+    a1 = (Jx - Jy) / Jx;
+    a2 = (Jz - Jx) / Jy;
+    a3 = (Jx - Jy) / Jz;
+
+    s1 = (_eq_point(4, 0) - _current_state(4, 0)) + c1 * (_eq_point(5, 0) - _current_state(5, 0));
+
+    sx = (_eq_point(0, 0) - _current_state(0, 0)) + c2 * (_eq_point(1, 0) - _current_state(1, 0));
+    sy = (_eq_point(4, 0) - _current_state(2, 0)) + c3 * (_eq_point(3, 0) - _current_state(3, 0));
+
+    u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
+    ux = (m / u_control(0, 0)) * (k3 * sat(sx) + k4 * sx + c2 * (_eq_point(0, 0) - _current_state(0, 0)));
+    uy = (m / u_control(0, 0)) * (k5 * sat(sy) + k6 * sy + c3 * (_eq_point(2, 0) - _current_state(2, 0)));
+
+    xd7 = asin(sat(uy));
+    xd8 = asin(sat(-ux / cos(xd7)));
+    xd9 = 0;
+
+    s2 = (xd7_dot - _current_state(6, 0)) + c4 * (xd7 - _current_state(7, 0));
+    s3 = (xd8_dot - _current_state(8, 0)) + c5 * (xd8 - _current_state(9, 0));
+    s4 = (xd9_dot - _current_state(10, 0)) + c6 * (xd9 - _current_state(11, 0));
+
+    u_control(1, 0) = (1 / b1) * (k7 * sat(s2) + k8 * s2 + xd7_ddot - a1 * _current_state(8, 0) * _current_state(10, 0) + c4 * (xd7_dot - _current_state(6, 0))); //roll
+    u_control(2, 0) = (1 / b2) * (k9 * sat(s3) + k10 * s3 + xd8_ddot - a2 * _current_state(6, 0) * _current_state(10, 0) + c5 * (xd8_dot - _current_state(8, 0))); //pitch
+    u_control(3, 0) = (1 / b3) * (k11 * sat(s4) + k12 * s4 + xd9_ddot - a3 * _current_state(6, 0) * _current_state(8, 0) + c6 * (xd9_dot - _current_state(10, 0))); //yaw
+
+
+
+    //------------------------- Sliding Mode Control - Hovering Only -----------------------
+
+    //s2 = (0 - _current_state(6, 0)) + c4 * (0 - _current_state(7, 0));
+    //s3 = (0 - _current_state(8, 0)) + c5 * (0 - _current_state(9, 0));
+    //s4 = (0 - _current_state(10, 0)) + c6 * (0 - _current_state(11, 0));
+
+
+    //u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
+    //u_control(1, 0) = (1 / b1) * (k8 * sat(s2) + k9 * s2  - a1 * _current_state(8, 0) * _current_state(10, 0) + c4 * (_eq_point(6, 0) - _current_state(6, 0))); //roll
+    //u_control(2, 0) = (1 / b2) * (k9 * sat(s3) + k10 * s3  - a2 * _current_state(6, 0) * _current_state(10, 0) + c5 * (_eq_point(8, 0) - _current_state(8, 0))); //pitch
+    //u_control(3, 0) = (1 / b3) * (k11 * sat(s4) + k12 * s4  - a3 * _current_state(6, 0) * _current_state(9, 0) + c6 * (_eq_point(10, 0) - _current_state(10, 0))); //yaw
+
+
+    //----------------------------------------------------------------------------------------
+
+
+    u_control_norm(1, 0) = fmin(fmax((u_control(1, 0)) / (0.1080f * 4.0f), -1.0f), 1.0f);  //u2 - roll
+    u_control_norm(2, 0) = fmin(fmax((u_control(2, 0)) / (0.1080f * 4.0f), -1.0f), 1.0f); //u3 - pitch
+    u_control_norm(3, 0) = fmin(fmax((u_control(3, 0)) / (0.1080f * 4.0f), -1.0f), 1.0f);	 //u4 - yaw
+    //u_control_norm(0,0) = fmin(fmax((u_control(0,0)+ff_thrust)/16.0f, 0.0f), 1.0f);  //u1 - thrust 
+    u_control_norm(0, 0) = fmin(fmax((u_control(0, 0)) / 16.0f, 0.0f), 1.0f);  //u1 - thrust 
+
+
+   // not normalized control inputs
+    u_control(0, 0) = u_control_norm(0, 0) * 16.0f;
+    u_control(1, 0) = u_control_norm(1, 0) * 4.0f;
+    u_control(2, 0) = u_control_norm(2, 0) * 4.0f;
+    u_control(3, 0) = u_control_norm(3, 0) * 4.0f;
+
+    //"\t" <<  u_control(0,0)+ff_thrust << "\n";
+         /* Save data*/
+    // writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
+    // writeInputOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
+    // writeLyapunovOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/lyapunov.txt", _lyap_fun(0,0), now); 
+    // writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", _current_state_ekf, now);
+
+    //------------- Javier-----------------------
+    writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
+    writeInputOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now);
+    writeLyapunovOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_fileslyapunov.txt", _lyap_fun(0, 0), now);
+    writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_filesekf.txt", _current_state_ekf, now);
+
+    return u_control_norm;
 
 }
 
-Matrix<float,4,1> QuadrotorLQRControl::normalizationControlInputs(Matrix<float,4,1> _u)
+Matrix<float, 4, 1> QuadrotorLQRControl::normalizationControlInputs(Matrix<float, 4, 1> _u)
 {
-   Matrix<float,4,1> _u_norm;
-   _u_norm(0,0) = _u(0,0)*16.0f;
-   _u_norm(1,0) = _u(1,0)*(0.1080f*4.0f);
-   _u_norm(2,0) = _u(2,0)*(0.1080f*4.0f);
-   _u_norm(3,0) = _u(3,0)*(0.1f*1.0f); 
+    Matrix<float, 4, 1> _u_norm;
+    _u_norm(0, 0) = _u(0, 0) * 16.0f;
+    _u_norm(1, 0) = _u(1, 0) * (0.1080f * 4.0f);
+    _u_norm(2, 0) = _u(2, 0) * (0.1080f * 4.0f);
+    _u_norm(3, 0) = _u(3, 0) * (0.1f * 1.0f);
 
-return _u_norm;
+    return _u_norm;
 }
 
-Matrix<float,4,1> QuadrotorLQRControl::getLQRcontrols()
+Matrix<float, 4, 1> QuadrotorLQRControl::getLQRcontrols()
 {
 
-return u_control;
+    return u_control;
 
 }
 
-void QuadrotorLQRControl::setCurrentState(Matrix<float,12,1> _state_estimate)
+void QuadrotorLQRControl::setCurrentState(Matrix<float, 12, 1> _state_estimate)
 {
 
-      _current_state = _state_estimate;
+    _current_state = _state_estimate;
 
 }
 
@@ -336,38 +419,38 @@ void QuadrotorLQRControl::setCurrentState(Matrix<float,12,1> _state_estimate)
 void QuadrotorLQRControl::setCurrentState(struct vehicle_attitude_s _v_att, struct vehicle_local_position_s  _v_local_pos)
 {
 
-      _current_state(0,0) = _v_local_pos.vx; //xdot
-      _current_state(1,0) = _v_local_pos.x;  //x 
-      _current_state(2,0) = _v_local_pos.vy; //ydot
-      _current_state(3,0) = _v_local_pos.y; //y
-      _current_state(4,0) = _v_local_pos.vz; //zdot
-      _current_state(5,0) = _v_local_pos.z; //z
-    
-      _current_state(6,0)  = _v_att.rollspeed;                 //roll dot
-      _current_state(7,0)  = Eulerf(Quatf(_v_att.q)).phi();    //roll - phi
-      _current_state(8,0)  = _v_att.pitchspeed;                //pitch dot
-      _current_state(9,0)  = Eulerf(Quatf(_v_att.q)).theta();  //pitch - theta
-      _current_state(10,0) = _v_att.yawspeed;	               // yawdot
-      _current_state(11,0) = Eulerf(Quatf(_v_att.q)).psi();    //yaw - psi
+    _current_state(0, 0) = _v_local_pos.vx; //xdot
+    _current_state(1, 0) = _v_local_pos.x;  //x 
+    _current_state(2, 0) = _v_local_pos.vy; //ydot
+    _current_state(3, 0) = _v_local_pos.y; //y
+    _current_state(4, 0) = _v_local_pos.vz; //zdot
+    _current_state(5, 0) = _v_local_pos.z; //z
+
+    _current_state(6, 0) = _v_att.rollspeed;                 //roll dot
+    _current_state(7, 0) = Eulerf(Quatf(_v_att.q)).phi();    //roll - phi
+    _current_state(8, 0) = _v_att.pitchspeed;                //pitch dot
+    _current_state(9, 0) = Eulerf(Quatf(_v_att.q)).theta();  //pitch - theta
+    _current_state(10, 0) = _v_att.yawspeed;	               // yawdot
+    _current_state(11, 0) = Eulerf(Quatf(_v_att.q)).psi();    //yaw - psi
 
 }
 
 void QuadrotorLQRControl::setCurrentStateEkf(struct vehicle_attitude_s _v_att, struct vehicle_local_position_s  _v_local_pos)
 {
 
-      _current_state_ekf(0,0) = _v_local_pos.vx;
-      _current_state_ekf(1,0) = _v_local_pos.x;
-      _current_state_ekf(2,0) = _v_local_pos.vy;
-      _current_state_ekf(3,0) = _v_local_pos.y;
-      _current_state_ekf(4,0) = _v_local_pos.vz;
-      _current_state_ekf(5,0) = _v_local_pos.z;
-    
-      _current_state_ekf(6,0)  = _v_att.rollspeed;
-      _current_state_ekf(7,0)  = Eulerf(Quatf(_v_att.q)).phi();
-      _current_state_ekf(8,0)  = _v_att.pitchspeed;
-      _current_state_ekf(9,0)  = Eulerf(Quatf(_v_att.q)).theta();
-      _current_state_ekf(10,0) = _v_att.yawspeed;	
-      _current_state_ekf(11,0) = Eulerf(Quatf(_v_att.q)).psi();
+    _current_state_ekf(0, 0) = _v_local_pos.vx;
+    _current_state_ekf(1, 0) = _v_local_pos.x;
+    _current_state_ekf(2, 0) = _v_local_pos.vy;
+    _current_state_ekf(3, 0) = _v_local_pos.y;
+    _current_state_ekf(4, 0) = _v_local_pos.vz;
+    _current_state_ekf(5, 0) = _v_local_pos.z;
+
+    _current_state_ekf(6, 0) = _v_att.rollspeed;
+    _current_state_ekf(7, 0) = Eulerf(Quatf(_v_att.q)).phi();
+    _current_state_ekf(8, 0) = _v_att.pitchspeed;
+    _current_state_ekf(9, 0) = Eulerf(Quatf(_v_att.q)).theta();
+    _current_state_ekf(10, 0) = _v_att.yawspeed;
+    _current_state_ekf(11, 0) = Eulerf(Quatf(_v_att.q)).psi();
 
 }
 
@@ -375,140 +458,167 @@ void QuadrotorLQRControl::setCurrentStateEkf(struct vehicle_attitude_s _v_att, s
 void QuadrotorLQRControl::setAutoEqPoint(struct vehicle_attitude_s _v_att, struct vehicle_local_position_s  _v_local_pos)
 {
 
-      _eq_point(0,0) = _v_local_pos.vx;
-      _eq_point(1,0) = _v_local_pos.x;
-      _eq_point(2,0) = _v_local_pos.vy;
-      _eq_point(3,0) = _v_local_pos.y;
-      _eq_point(4,0) = _v_local_pos.vz;
-      _eq_point(5,0) = _v_local_pos.z;
-    
-      _eq_point(6,0)  = _v_att.rollspeed;
-      _eq_point(7,0)  = Eulerf(Quatf(_v_att.q)).phi();
-      _eq_point(8,0)  = _v_att.pitchspeed;
-      _eq_point(9,0)  = Eulerf(Quatf(_v_att.q)).theta();
-      _eq_point(10,0) = _v_att.yawspeed;	
-      _eq_point(11,0) = Eulerf(Quatf(_v_att.q)).psi();
+    _eq_point(0, 0) = _v_local_pos.vx;
+    _eq_point(1, 0) = _v_local_pos.x;
+    _eq_point(2, 0) = _v_local_pos.vy;
+    _eq_point(3, 0) = _v_local_pos.y;
+    _eq_point(4, 0) = _v_local_pos.vz;
+    _eq_point(5, 0) = _v_local_pos.z;
+
+    _eq_point(6, 0) = _v_att.rollspeed;
+    _eq_point(7, 0) = Eulerf(Quatf(_v_att.q)).phi();
+    _eq_point(8, 0) = _v_att.pitchspeed;
+    _eq_point(9, 0) = Eulerf(Quatf(_v_att.q)).theta();
+    _eq_point(10, 0) = _v_att.yawspeed;
+    _eq_point(11, 0) = Eulerf(Quatf(_v_att.q)).psi();
 
 
 }
 
-void QuadrotorLQRControl::setEquilibriumPoint(Matrix<float,12,1> eqPoint)
+void QuadrotorLQRControl::setEquilibriumPoint(Matrix<float, 12, 1> eqPoint)
 {
 
-      _eq_point(0,0) = eqPoint(0,0);
-      _eq_point(1,0) = eqPoint(1,0);
-      _eq_point(2,0) = eqPoint(2,0);
-      _eq_point(3,0) = eqPoint(3,0);
-      _eq_point(4,0) = eqPoint(4,0);
-      _eq_point(5,0) = eqPoint(5,0);
-    
-      _eq_point(6,0)  = eqPoint(6,0);
-      _eq_point(7,0)  = eqPoint(7,0);
-      _eq_point(8,0)  = eqPoint(8,0);
-      _eq_point(9,0)  = eqPoint(9,0);
-      _eq_point(10,0) = eqPoint(10,0);	
-      _eq_point(11,0) = eqPoint(11,0);
+    _eq_point(0, 0) = eqPoint(0, 0);
+    _eq_point(1, 0) = eqPoint(1, 0);
+    _eq_point(2, 0) = eqPoint(2, 0);
+    _eq_point(3, 0) = eqPoint(3, 0);
+    _eq_point(4, 0) = eqPoint(4, 0);
+    _eq_point(5, 0) = eqPoint(5, 0);
 
-    
-      
+    _eq_point(6, 0) = eqPoint(6, 0);
+    _eq_point(7, 0) = eqPoint(7, 0);
+    _eq_point(8, 0) = eqPoint(8, 0);
+    _eq_point(9, 0) = eqPoint(9, 0);
+    _eq_point(10, 0) = eqPoint(10, 0);
+    _eq_point(11, 0) = eqPoint(11, 0);
+
+
+
 
 }
 
 void QuadrotorLQRControl::setAutoEqPointFlag(bool flag)
 {
 
-   _auto_eq_point_flag = flag;
+    _auto_eq_point_flag = flag;
 }
 
 bool QuadrotorLQRControl::getAutoEqPointFlag()
 {
 
-   return _auto_eq_point_flag;
+    return _auto_eq_point_flag;
 }
 
 /* Save data on files */
 
-void QuadrotorLQRControl::writeStateOnFile(const char *filename, Matrix <float, 12, 1> vect, hrt_abstime t) {
+void QuadrotorLQRControl::writeStateOnFile(const char* filename, Matrix <float, 12, 1> vect, hrt_abstime t) {
 
-	ofstream outfile;
-	outfile.open(filename, std::ios::out | std::ios::app);
-        
-        outfile << t << "\t";   // time
-       
-	for(int i=0;i<12;i++){
-		if(i==11){
-			outfile << vect(i,0) << "\n";
-		}else{
-	         outfile << vect(i,0) << "\t";
-		}
-	}
-	outfile.close();
-	return;
+    ofstream outfile;
+    outfile.open(filename, std::ios::out | std::ios::app);
+
+    outfile << t << "\t";   // time
+
+    for (int i = 0; i < 12; i++) {
+        if (i == 11) {
+            outfile << vect(i, 0) << "\n";
+        }
+        else {
+            outfile << vect(i, 0) << "\t";
+        }
+    }
+    outfile.close();
+    return;
 }
 
 
-void QuadrotorLQRControl::writeInputOnFile(const char *filename, Matrix <float, 4, 1> vect, hrt_abstime t) {
+void QuadrotorLQRControl::writeInputOnFile(const char* filename, Matrix <float, 4, 1> vect, hrt_abstime t) {
 
-	ofstream outfile;
-	outfile.open(filename, std::ios::out | std::ios::app);
-        
-        outfile << t << "\t";   // time
-        
-	for(int i=0;i<4;i++){
-		if(i==3){
-			outfile << vect(i,0) << "\n";
-		}else{
-	         outfile << vect(i,0) << "\t";
-		}
-	}
-	outfile.close();
-	return;
+    ofstream outfile;
+    outfile.open(filename, std::ios::out | std::ios::app);
+
+    outfile << t << "\t";   // time
+
+    for (int i = 0; i < 4; i++) {
+        if (i == 3) {
+            outfile << vect(i, 0) << "\n";
+        }
+        else {
+            outfile << vect(i, 0) << "\t";
+        }
+    }
+    outfile.close();
+    return;
 }
 
-void QuadrotorLQRControl::writeLyapunovOnFile(const char *filename, float value, hrt_abstime t) {
+void QuadrotorLQRControl::writeLyapunovOnFile(const char* filename, float value, hrt_abstime t) {
 
-	ofstream outfile;
-	outfile.open(filename, std::ios::out | std::ios::app);
-        
-        outfile << t << "\t" << value << "\n";   
-	outfile.close();
-	return;
+    ofstream outfile;
+    outfile.open(filename, std::ios::out | std::ios::app);
+
+    outfile << t << "\t" << value << "\n";
+    outfile.close();
+    return;
 }
 
-Matrix <float, 12, 12>  QuadrotorLQRControl::readMatrixP(const char *filename)
-    {
+Matrix <float, 12, 12>  QuadrotorLQRControl::readMatrixP(const char* filename)
+{
 
     static Matrix <float, 12, 12> result;
     static int rows = 12;
     static int cols = 12;
     ifstream infile;
     infile.open(filename);
-    if (infile.is_open()){
-         for (int i=0; i<rows;i++){
-    		string line;
-    		getline(infile, line);
-    		stringstream stream(line);
-    		for (int j=0; j<cols; j++){
-    			stream >> result(i,j);
-    		}
+    if (infile.is_open()) {
+        for (int i = 0; i < rows; i++) {
+            string line;
+            getline(infile, line);
+            stringstream stream(line);
+            for (int j = 0; j < cols; j++) {
+                stream >> result(i, j);
+            }
 
-    	}
-    	infile.close();
-    }else cout << "Unable to open file";
+        }
+        infile.close();
+    }
+    else cout << "Unable to open file";
     return result;
 
- }
- 
- int QuadrotorLQRControl::sign(double v) 
- {
-  return (v > 0) - (v < 0);
 }
 
- float QuadrotorLQRControl::sat(float s)
- {
-     if (fabs(s) < 1)
-         return s;
-     else if (fabs(s) > 1)
-         return sign(s);
- }
+int QuadrotorLQRControl::sign(double v)
+{
+    return (v > 0) - (v < 0);
+}
 
+float QuadrotorLQRControl::sat(float s)
+{
+    if (fabs(s) < 1)
+        return s;
+    else if (fabs(s) > 1)
+        return sign(s);
+}
+
+
+Matrix<float, 3, 1> QuadrotorLQRControl::generateRef(float time)
+{
+    //cout << "time ref:" << time << endl; 
+    float r = 2;
+    float h = 10;
+
+    if (time < 10) {
+        _ref_points(0, 0) = 0;
+        _ref_points(1, 0) = 0;
+        _ref_points(2, 0) = -1;
+
+         cout << "rising" << endl;
+    }
+    else {
+        _ref_points(0, 0) = r * sin(time);
+        _ref_points(1, 0) = r * cos(time);
+        _ref_points(2, 0) = -0.1 * time;
+
+    }
+
+
+
+}

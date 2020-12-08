@@ -56,8 +56,10 @@ public:
        void setCurrentState(Matrix<float,12,1> _state_estimate);
 
        Matrix<float,4,1> normalizationControlInputs(Matrix<float,4,1> _u);
-       
 
+	   Matrix<float,3,1> generateRef(float time);
+
+       
 private:
        
       
@@ -72,6 +74,8 @@ private:
 
       Matrix<float,12,1> _current_state_ekf;
 
+	  Matrix<float, 3, 1> _ref_points;
+
 
       bool _auto_eq_point_flag;
 	  float ff_thrust;
@@ -82,49 +86,52 @@ private:
 	  float s3; 
 	  float s4;
 	 
-	 
-	 //------ SMC - Ecuador --------
-	 
-	 float s_ecuad; 
-	 float kd_z;
-	 float kd_roll;
-	 float kd_pitch;
-	 float kd_yaw; 
-	 
-	 float lambda_z;
-	 float lambda_roll;
-	 float lambda_pitch;
-	 float lambda_yaw;
-	 
-	 float delta_z;
-	 float delta_roll;
-	 float delta_pitch;
-	 float delta_yaw;
-	 
 	 	  
 	 
-	 //---------------------------
-	
-	 float sx;
-	 float sy;
-	
-	 float xd7;//roll 
-	 float xd7_dot;
-	 float xd7_ddot;
-	 float xd7_old;
-	 float xd7_dot_old;
-	 
-	 float xd8; //pitch 
-	 float xd8_dot;
-	 float xd8_ddot;
-	 float xd8_old;
-	 float xd8_dot_old;
+	 // ------- reference generation -----------
 
-	 float xd9; //yaw 
-	 float xd9_dot;
-	 float xd9_ddot;
-	 float xd9_old;
-	 float xd9_dot_old;
+	  float time_ref; 
+	  float old_time_ref;
+
+	  float ref_x;
+	  float ref_xdot;
+	  float ref_xddot;
+	  float ref_x_old;
+	  float ref_xdot_old;
+
+	  float ref_y;
+	  float ref_ydot;
+	  float ref_yddot;
+	  float ref_y_old;
+	  float ref_ydot_old;
+
+	  float ref_z;
+	  float ref_zdot;
+	  float ref_zddot;
+	  float ref_z_old;
+	  float ref_zdot_old;
+
+	 // --------- Sliding Mode Control Variables --------
+      float sx;
+	  float sy;
+	
+      float xd7;//roll 
+	  float xd7_dot;
+	  float xd7_ddot;
+	  float xd7_old;
+	  float xd7_dot_old;
+	 
+	  float xd8; //pitch 
+	  float xd8_dot;
+      float xd8_ddot;
+	  float xd8_old;
+	  float xd8_dot_old;
+
+	  float xd9; //yaw 
+	  float xd9_dot;
+	  float xd9_ddot;
+	  float xd9_old;
+	  float xd9_dot_old;
 	 
 	 float b1;
 	 float b2;
@@ -143,35 +150,66 @@ private:
 	 float l = 1; //0.33 / 2;
 
 	 
-	// For Altitude Z
-	 float c1 = 68;
-	 float k1 = 25;
-	 float k2 = 10;
-	 
+	//// For Altitude Z
+	// float c1 = 68;
+	// float k1 = 25;
+	// float k2 = 10;
+
+	// // For X-axis
+	// float c2 = 0.001;
+	// float k3 = 0.001;
+	// float k4 = 0.001;
+
+	// // For Y-axis
+	// float c3 = 0.001;
+	// float k5 = 0.001;
+	// float k6 = 0.001;
+
+	// // For phi - u2
+	// float c4 = 5; //20
+	// float k7 = 50; //5
+	// float k8 = 100; //5
+
+	//// For theta - u3
+	// float c5 = 5;
+	// float k9 = 100;
+	// float k10 = 10;
+
+	// // For psi - u4
+	// float c6 = 5; //20
+	// float k11 = 100; //5
+	// float k12 = 10; //5
+
+		// For Altitude Z
+	 float c1 = 35;
+	 float k1 = 8;
+	 float k2 = 8;
+
 	 // For X-axis
-	 float c2 = 0.001;
-	 float k3 = 0.001;
-	 float k4 = 0.001;
-	 
+	 float c2 = 1;//2;
+	 float k3 = 0.1;//0.1;
+	 float k4 = 0.1; //0.1/0.3;
+
 	 // For Y-axis
-	 float c3 = 0.001;
-	 float k5 = 0.001;
-	 float k6 = 0.001;
-   
+	 float c3 = 1;//2;
+	 float k5 = 0.1;//0.1;
+	 float k6 = 0.1;//0.1/0.3;
+
 	 // For phi - u2
-	 float c4 = 5; //20
-	 float k7 = 100; //5
-	 float k8 = 50; //5
-					 
-	// For theta - u3
-	 float c5 = 5;
-	 float k9 = 100;
-	 float k10 = 10;
-   
-   // For psi - u4
-     float c6 = 5; //20
-     float k11 = 100; //5
-     float k12 = 10; //5
+	 float c4 = 0.5;
+	 float k7 = 0.1;
+	 float k8 = 20;
+
+	 // For theta - u3
+	 float c5 = 0.5;
+	 float k9 = 0.1;
+	 float k10 = 20;
+
+	 // For psi - u4
+	 float c6 = 0.5;
+	 float k11 = 0.5;
+	 float k12 = 0.5;
+
 
 	   
 
@@ -192,6 +230,8 @@ private:
 	 int sign(double v);
 
 	 float sat(float s);
+
+	
       
 
 };
