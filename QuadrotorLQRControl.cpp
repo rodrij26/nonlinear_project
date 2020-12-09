@@ -115,6 +115,11 @@ QuadrotorLQRControl::QuadrotorLQRControl()
 	outfile4.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/ekf.txt");
 	outfile4.close();
 
+	ofstream outfile6;
+	outfile6.open("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/ref.txt");
+	outfile6.close();
+
+
 	_past_time = hrt_absolute_time() * 1e-6;
 
 }
@@ -357,6 +362,7 @@ Matrix<float, 4, 1> QuadrotorLQRControl::LQRcontrol()
 	// writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", _current_state_ekf, now);
 
 	//------------- Siddartha-----------------------
+	writeRefOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/reference.txt", _ref_points, now);
 	writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
 	writeInputOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now);
 	writeLyapunovOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_fileslyapunov.txt", _lyap_fun(0, 0), now);
@@ -506,6 +512,25 @@ void QuadrotorLQRControl::writeStateOnFile(const char* filename, Matrix <float, 
 	return;
 }
 
+void QuadrotorLQRControl::writeRefOnFile(const char* filename, Matrix <float, 3, 1> vect, hrt_abstime t) {
+
+	ofstream outfile;
+	outfile.open(filename, std::ios::out | std::ios::app);
+
+	outfile << t << "\t";   // time
+
+	for (int i = 0; i < 3; i++) {
+		if (i == 2) {
+			outfile << vect(i, 0) << "\n";
+		}
+		else {
+			outfile << vect(i, 0) << "\t";
+		}
+	}
+	outfile.close();
+	return;
+}
+
 
 void QuadrotorLQRControl::writeInputOnFile(const char* filename, Matrix <float, 4, 1> vect, hrt_abstime t) {
 
@@ -577,10 +602,10 @@ float QuadrotorLQRControl::sat(float s)
 Matrix<float, 3, 1> QuadrotorLQRControl::generateRef(float time)
 {
 	//cout << "time ref:" << time << endl; 
-	float r = 8;
+	float r = 2;
 	float h = 10;
 
-	float time_stop = 4;
+	float time_stop = 2;
 
 	if (time < time_stop) {
 		_ref_points(0, 0) = 0;
@@ -593,7 +618,12 @@ Matrix<float, 3, 1> QuadrotorLQRControl::generateRef(float time)
 		cout << "helix" << endl;
 		_ref_points(0, 0) = r * cos(time_constant*(time-time_stop)) - r;
 		_ref_points(1, 0) = r * sin(time_constant*(time-time_stop));
-		_ref_points(2, 0) = -(1/ time_stop) * time;
+		//_ref_points(2, 0) = -1 - time_constant * (time-time_stop);
+		_ref_points(2, 0) = -1;
+
+		//_ref_points(0, 0) = -2;
+		//_ref_points(1, 0) = -2;
+		//_ref_points(2, 0) = -2;
 
 	}
 

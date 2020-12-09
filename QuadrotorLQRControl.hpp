@@ -153,7 +153,7 @@ private:
 	float g = 9.81;
 
 	// For Altitude Z
-	float c1 = 35;
+	float c1 = 20;
 	float k1 = 8;
 	float k2 = 8;
 
@@ -190,15 +190,15 @@ private:
 	float Kdy = 10;
 	float Kdz = 4;
 
-	float Kpx = 20;
-	float Kpy = 10;
+	float Kpx = 15;
+	float Kpy = 30;
 	float Kpz = 4; 
 
 	float ddxc;
 	float ddyc;
 	float ddzc;
 
-	float time_constant = 0.05;
+	float time_constant = 0.25;
 
 
 
@@ -206,9 +206,13 @@ private:
 
 	void writeStateOnFile(const char* filename, Matrix <float, 12, 1> vect, hrt_abstime t);
 
+	void writeRefOnFile(const char* filename, Matrix <float, 3, 1> vect, hrt_abstime t);
+
 	Matrix <float, 4, 12> readMatrixK(const char* filename);
 
 	void writeInputOnFile(const char* filename, Matrix <float, 4, 1> vect, hrt_abstime t);
+
+
 
 	void writeLyapunovOnFile(const char* filename, float value, hrt_abstime t);
 
