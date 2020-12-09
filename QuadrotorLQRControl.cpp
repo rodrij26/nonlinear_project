@@ -146,12 +146,12 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	 dt = 0.004;
 	 }
 
-      _eq_point(5,0) =  -0.2*time_ref; //z
-	  _eq_point(4,0) =  -0.2; //zdot
-      _eq_point(1,0) =  -1*cos(0.1*time_ref); //x
-	  _eq_point(0,0) =  0.1*sin(time_ref); //xdot
-      _eq_point(3,0) = -1*sin(0.1*time_ref); //y
-	  _eq_point(2,0) = -0.1*cos(time_ref); //ydot
+      _eq_point(5,0) =  -0.1*time_ref; //z
+	  _eq_point(4,0) =  -0.1; //zdot
+      _eq_point(1,0) =  -1*cos(1*time_ref); //x
+	  _eq_point(0,0) =  1*sin(time_ref); //xdot
+      _eq_point(3,0) = -1*sin(1*time_ref); //y
+	  _eq_point(2,0) = -1*cos(time_ref); //ydot
 /* 	 _eq_point(1,0) = -_current_time/2.5; //x
      _eq_point(3,0) = sin(_current_time); //y
      _eq_point(5,0) = sin(_current_time); //z  */
@@ -302,15 +302,20 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 	   
 	   //motion control about x and y axis
 	   u_control(0,0) = -(m/(cos(_current_state(7,0)) * cos(_current_state(9, 0)))) * (k1*sat(s1) + k2*s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
+	   u1 = u_control(0,0);
 	   //u_control(0,0) = -((m/(cos(_current_state(7,0)) * cos(_current_state(9, 0)))) * (g + c1 * (_eq_point(4, 0) - _current_state(4, 0))));
        ux = (m/u_control(0,0))*(k3*sat(sx) + k4*sx + c2*(_eq_point(0,0) -_current_state(0,0)));
        uy = (m/u_control(0,0))*(k5*sat(sy) + k6*sy + c3*(_eq_point(2,0)-_current_state(2,0)));
 	   //ux = ((m/u_control(0,0))*(c2*(_eq_point(0,0) -_current_state(0,0))))*sat(sx/0.5);
        //uy = ((m/u_control(0,0))*(c3*(_eq_point(2,0)-_current_state(2,0))))*sat(sy/0.5);
+	   
+	   u_n = pow(pow(u1,2)+pow(ux,2)+pow(uy,2),0.5);
+	   ux_n = ux/u_n;
+	   uy_n = uy/u_n;
              
        //xd7 = asin(sat(ux * sin(_current_state(11, 0)) - uy * cos(_current_state(11, 0))));
-	   xd7 = asin(sat(uy));
-	   xd8 = asin(sat(-ux/cos(xd7)));
+	   xd7 = asin(sat(uy_n));
+	   xd8 = asin(sat(-ux_n/cos(xd7)));
 	   //xd8 = asin(sat(-ux/cos(_current_state(7,0))));
        //xd8 = asin(sat((ux * cos(xd9) - uy * sin(xd9)) / (cos(xd7))));
        //xd9 = atan((_eq_point(3, 0) - _current_state(3, 0)) / (_eq_point(1, 0) - _current_state(1, 0)));

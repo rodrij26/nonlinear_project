@@ -79,6 +79,10 @@ private:
 	  float time_ref = 0.0f;
 	 float ux;
 	 float uy; 
+	 float u_n;
+	 float ux_n;
+	 float uy_n;
+	 float u1;
 	 float s1; 
 	 float s2;
 	 float s3; 
@@ -123,14 +127,14 @@ private:
 	   float k2 = 2;//8;
 	   
 	   // For X-axis
-	   float c2 = 2;//1;
-	   float k3 = 0.1;//0.1;
-	   float k4 = 1;//working-0.1; //0.1/0.3;
+	   float c2 = 3;//1;
+	   float k3 = 1;//0.1;
+	   float k4 = 0.5;//working-0.1; //0.1/0.3;
 	   
 	   // For Y-axis
-	   float c3 = 2;//1;
-	   float k5 = 0.1;//0.1;
-	   float k6 = 1;//working-0.1;//0.1/0.3;
+	   float c3 = 3;//1;
+	   float k5 = 1;//0.1;
+	   float k6 = 0.5;//working-0.1;//0.1/0.3;
 	   
 	   // For phi - u2
 	   float c4 = 1;//0.5;
