@@ -30,10 +30,10 @@ QuadrotorLQRControl::QuadrotorLQRControl()
        _current_state(i,0) = 0.0f;
        _eq_point(i,0) = 0.0f;
     }
-
+/* 
       _eq_point(1,0) =  -1.0f; //x
       _eq_point(3,0) =  -1.0f; //y
-      _eq_point(5,0) = -1.0f; //z
+      _eq_point(5,0) = -1.0f; //z */
 	
 	 // Sliding Mode Control 
 
@@ -142,9 +142,20 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 
      float _current_time = now *1e-6;
      float dt = _current_time-_past_time;
+	 if (dt > 0.01){
+	 dt = 0.004;
+	 }
+
+      _eq_point(5,0) =  -0.2*time_ref; //z
+	  _eq_point(4,0) =  -0.2; //zdot
+      _eq_point(1,0) =  -1*cos(0.1*time_ref); //x
+	  _eq_point(0,0) =  0.1*sin(time_ref); //xdot
+      _eq_point(3,0) = -1*sin(0.1*time_ref); //y
+	  _eq_point(2,0) = -0.1*cos(time_ref); //ydot
 /* 	 _eq_point(1,0) = -_current_time/2.5; //x
      _eq_point(3,0) = sin(_current_time); //y
      _eq_point(5,0) = sin(_current_time); //z  */
+	 time_ref = time_ref + dt; 
 	 
 	 //-------- Sliding Mode Control -------
 /* 	 _eq_point(0,0) = (-4.0f*pow((_current_time),3))*exp(-pow((_current_time),4)); //xdot
@@ -285,7 +296,7 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
        
        sx = (_eq_point(0,0) - _current_state(0,0)) + c2*(_eq_point(1,0)-_current_state(1,0));
 	   sy = (_eq_point(4,0) - _current_state(2,0)) + c3*(_eq_point(3,0)-_current_state(3,0));
-	   cout << "s1: " << s1 << ", sx: " << sx << ", sy: " << sy << "\n";
+	   //cout << "s1: " << s1 << ", sx: " << sx << ", sy: " << sy << "\n";
 	   //u_control(0,0) = -(m/(cos(x(7))*cos(x(8))))*(k1*sign(s1)+k2*s1+g+c1*(r(6)-x(6)));
 
 	   
@@ -300,13 +311,14 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
        //xd7 = asin(sat(ux * sin(_current_state(11, 0)) - uy * cos(_current_state(11, 0))));
 	   xd7 = asin(sat(uy));
 	   xd8 = asin(sat(-ux/cos(xd7)));
+	   //xd8 = asin(sat(-ux/cos(_current_state(7,0))));
        //xd8 = asin(sat((ux * cos(xd9) - uy * sin(xd9)) / (cos(xd7))));
        //xd9 = atan((_eq_point(3, 0) - _current_state(3, 0)) / (_eq_point(1, 0) - _current_state(1, 0)));
 /* 	   xd7 = (asin(sat(ux))); // desired as functions 
 	   xd8 = (asin(sat(-uy/cos(xd7)))); */
-       //xd9 = atan2((_eq_point(3, 0) - _current_state(3, 0)), (_eq_point(1, 0) - _current_state(1, 0)));
+       //xd9 = sat(atan2((_eq_point(3, 0) - _current_state(3, 0)), (_eq_point(1, 0) - _current_state(1, 0))));
 	   //xd9 = atan2((_eq_point(1, 0) - _current_state(1, 0)), (_eq_point(3, 0) - _current_state(3, 0)));
-	   xd9 = 0;
+	   xd9 = 0.0;
 
        //cout << "xd7: " << xd7 << ", xd8: " << xd8 << ", xd9: " << xd9 << "\n";
        //cout << "xd7_dot: " << xd7_dot << ", xd8_dot: " << xd8_dot << ", xd9_dot: " << xd9_dot << "\n";
@@ -328,7 +340,7 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
        s4 = (xd9_dot-_current_state(10,0)) + c6*(xd9-_current_state(11,0));
        
 
-	   cout << "s2: " << s2 << ", s3: " << s3 << ", s4: " << s4 << "\n";
+	   //cout << "s2: " << s2 << ", s3: " << s3 << ", s4: " << s4 << "\n";
 	
 
        //u_control(0,0) = -(m/(cos(_current_state(7,0)) * cos(_current_state(9, 0)))) * (k1*sat(s1) + k2*s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
@@ -366,6 +378,7 @@ Matrix<float,4,1> QuadrotorLQRControl::LQRcontrol()
 		// writeStateOnFile("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/output_files/ekf.txt", _current_state_ekf, now);
 		
 		//------------- Siddartha-----------------------
+		writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/reference.txt", _eq_point, now);
 		writeStateOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/state.txt", _current_state, now);
 		writeInputOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_files/control_input.txt", u_control_norm, now); 
 		writeLyapunovOnFile("C:/PX4/home/Firmware/src/modules/mc_att_control/output_fileslyapunov.txt", _lyap_fun(0,0), now); 

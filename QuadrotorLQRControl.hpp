@@ -76,6 +76,7 @@ private:
       bool _auto_eq_point_flag;
      
       float ff_thrust;
+	  float time_ref = 0.0f;
 	 float ux;
 	 float uy; 
 	 float s1; 
@@ -117,34 +118,34 @@ private:
 	   float g = 9.81;
    
 	   // For Altitude Z
-	   float c1 = 35;
-	   float k1 = 8;
-	   float k2 = 8;
+	   float c1 = 15;//35;
+	   float k1 = 4;//8;
+	   float k2 = 2;//8;
 	   
 	   // For X-axis
-	   float c2 = 1;//2;
+	   float c2 = 2;//1;
 	   float k3 = 0.1;//0.1;
-	   float k4 = 0.1; //0.1/0.3;
+	   float k4 = 1;//working-0.1; //0.1/0.3;
 	   
 	   // For Y-axis
-	   float c3 = 1;//2;
+	   float c3 = 2;//1;
 	   float k5 = 0.1;//0.1;
-	   float k6 = 0.1;//0.1/0.3;
+	   float k6 = 1;//working-0.1;//0.1/0.3;
 	   
 	   // For phi - u2
-	   float c4 = 0.5;
-	   float k7 = 0.1;
-	   float k8 = 20;
+	   float c4 = 1;//0.5;
+	   float k7 = 0.5;//0.1
+	   float k8 = 15;//20;
 	   
 	   // For theta - u3
-	   float c5 = 0.5;
-	   float k9 = 0.1;
-	   float k10 = 20;
+	   float c5 = 1;//0.5;
+	   float k9 = 0.5;//0.1
+	   float k10 = 15;//20;
 	   
 	   // For psi - u4
 	   float c6 = 0.5;
-	   float k11 = 0.5;
-	   float k12 = 0.5;
+	   float k11 = 0.1; //0.5
+	   float k12 = 0.1; //0.5
 	   
 
       void writeStateOnFile(const char *filename, Matrix <float, 12, 1> vect, hrt_abstime t); 
