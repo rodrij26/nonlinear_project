@@ -34,6 +34,8 @@ QuadrotorLQRControl::QuadrotorLQRControl()
 	for (int i = 0; i < 3; i++)
 	{
 		_ref_points(i, 0) = 0.0f;
+		_t_norm(i, 0) = 0.0f;
+		_t(i, 0) = 0.0f;
 	}
 
 	_eq_point(1, 0) = -1.0f; //x
@@ -68,11 +70,19 @@ QuadrotorLQRControl::QuadrotorLQRControl()
 	old_time_ref = 0.0f;
 	time_ref = 0.0f;
 
+	psi_des = 0.0f;
+
+
+	ddxc = 0.0f;
+	ddyc = 0.0f;
+	ddzc = 0.0f;
+
 
 	u_control(0, 0) = 0.0f;
 	u_control(1, 0) = 0.0f;
 	u_control(2, 0) = 0.0f;
 	u_control(3, 0) = 0.0f;
+
 
 	//_K = readMatrixK("/home/raffaele/PX4/Firmware/src/modules/mc_att_control/lqr_files/new_controller.txt");
 	//_K = readMatrixK("C:\PX4\home\px4_external\src\modules\mc_att_control\lqr_files\new_controller.txt");
@@ -168,8 +178,8 @@ Matrix<float, 4, 1> QuadrotorLQRControl::LQRcontrol()
 	ref_z = _ref_points(2, 0);
 	_eq_point(5, 0) = ref_z;
 
-	//cout << "time: " << time_ref <<", ref_x: " << ref_x << ", ref_y: " << ref_y << ", ref_z: " << ref_z << "\n";
- //   cout << "-------------------------------------------------------------" << "\n \n";
+	cout << "time: " << time_ref <<", ref_x: " << ref_x << ", ref_y: " << ref_y << ", ref_z: " << ref_z << "\n";
+    cout << "-------------------------------------------------------------" << "\n \n";
 
 	ref_xdot = (ref_x - ref_x_old) / dt;
 	_eq_point(0, 0) = ref_xdot;
@@ -244,45 +254,85 @@ Matrix<float, 4, 1> QuadrotorLQRControl::LQRcontrol()
 	// x11 - pitch_dot		| _current_state(8,0)
 	// x12 - psi_dot 		| _current_state(10,0)
 
-	a1 = (Ix - Iy) / Ix;
+	//a1 = (Ix - Iy) / Ix;
+	//a2 = (Iz - Ix) / Iy;
+	//a3 = (Ix - Iy) / Iz;
+	//b1 = 1 / Ix;
+	//b2 = 1 / Iy;
+	//b3 = 1 / Iz;
+
+	
+
+	//sx = (_eq_point(0, 0) - _current_state(0, 0)) + c2 * (_eq_point(1, 0) - _current_state(1, 0));
+	//sy = (_eq_point(4, 0) - _current_state(2, 0)) + c3 * (_eq_point(3, 0) - _current_state(3, 0));
+	////cout << "s1: " << s1 << ", sx: " << sx << ", sy: " << sy << "\n";
+	//
+	////motion control about x and y axis
+	//u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
+
+	//ux = (m / u_control(0, 0)) * (k3 * sat(sx) + k4 * sx + c2 * (_eq_point(0, 0) - _current_state(0, 0)));
+	//uy = (m / u_control(0, 0)) * (k5 * sat(sy) + k6 * sy + c3 * (_eq_point(2, 0) - _current_state(2, 0)));
+
+	//xd7 = asin(sat(uy));
+	//xd8 = asin(sat(-ux / cos(xd7)));
+	////xd9 = atan((_eq_point(1, 0) - _current_state(1, 0))/ (_eq_point(3, 0) - _current_state(3, 0)));
+	//xd9 = 0;
+
+	////angular motion control --- s = e_dot + c*e
+	//s2 = (xd7_dot - _current_state(6, 0)) + c4 * (xd7 - _current_state(7, 0));
+	//s3 = (xd8_dot - _current_state(8, 0)) + c5 * (xd8 - _current_state(9, 0));
+	//s4 = (xd9_dot - _current_state(10, 0)) + c6 * (xd9 - _current_state(11, 0));
+
+
+	////cout << "s2: " << s2 << ", s3: " << s3 << ", s4: " << s4 << "\n";
+
+	//u_control(1, 0) = (1 / b1) * (k7 * sat(s2) + k8 * s2 + xd7_ddot - a1 * _current_state(8, 0) * _current_state(10, 0) + c4 * (xd7_dot - _current_state(6, 0))); //roll
+	//u_control(2, 0) = (1 / b2) * (k9 * sat(s3) + k10 * s3 + xd8_ddot - a2 * _current_state(6, 0) * _current_state(10, 0) + c5 * (xd8_dot - _current_state(8, 0))); //pitch
+	//u_control(3, 0) = (1 / b3) * (k11 * sat(s4) + k12 * s4 + xd9_ddot - a3 * _current_state(6, 0) * _current_state(8, 0) + c6 * (xd9_dot - _current_state(10, 0))); //yaw
+
+	//-------------------------- MATLAB Approach --------------------------------------------- //
+
+
+	a1 = (Iy - Iz) / Ix;
 	a2 = (Iz - Ix) / Iy;
 	a3 = (Ix - Iy) / Iz;
 	b1 = 1 / Ix;
 	b2 = 1 / Iy;
 	b3 = 1 / Iz;
 
+	ddxc = ref_xddot + Kdx * (ref_xdot - _current_state(0, 0)) + Kpx * (ref_x - _current_state(1, 0));
+	ddyc = ref_yddot + Kdy * (ref_ydot - _current_state(2, 0)) + Kpz * (ref_y - _current_state(3, 0));
+	ddzc = ref_zddot + Kdz * (ref_zdot - _current_state(4, 0)) + Kpx * (ref_z - _current_state(5, 0));
+
+	_t(0, 0) = ddxc;
+	_t(1, 0) = ddyc;
+	_t(2, 0) = ddzc;
+
+	float norm_t = pow(pow(ddxc, 2) + pow(ddyc, 2) + pow(ddzc + m*g, 2), 0.5);
+
+	_t_norm = _t / norm_t; // verify that you can do this
+
+	//position control
+
+	float sinTheta = cos(psi_des) * _t_norm(0, 0) + sin(psi_des) * _t_norm(1, 0);
+	xd8 = asin(sinTheta);
+	float sinPhi =  (sin(psi_des) * _t_norm(0,0) - cos(psi_des) * _t_norm(1,0)) / cos(xd8);
+	xd7 = asin(sinPhi);
+	xd9 = psi_des; 
+
+
+	//sliding surface
 	s1 = (_eq_point(4, 0) - _current_state(4, 0)) + c1 * (_eq_point(5, 0) - _current_state(5, 0));
-
-	sx = (_eq_point(0, 0) - _current_state(0, 0)) + c2 * (_eq_point(1, 0) - _current_state(1, 0));
-	sy = (_eq_point(4, 0) - _current_state(2, 0)) + c3 * (_eq_point(3, 0) - _current_state(3, 0));
-	//cout << "s1: " << s1 << ", sx: " << sx << ", sy: " << sy << "\n";
-	
-	//motion control about x and y axis
-	u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
-
-	ux = (m / u_control(0, 0)) * (k3 * sat(sx) + k4 * sx + c2 * (_eq_point(0, 0) - _current_state(0, 0)));
-	uy = (m / u_control(0, 0)) * (k5 * sat(sy) + k6 * sy + c3 * (_eq_point(2, 0) - _current_state(2, 0)));
-
-	xd7 = asin(sat(uy));
-	xd8 = asin(sat(-ux / cos(xd7)));
-	xd9 = 0;
-
-	//angular motion control --- s = e_dot + c*e
 	s2 = (xd7_dot - _current_state(6, 0)) + c4 * (xd7 - _current_state(7, 0));
 	s3 = (xd8_dot - _current_state(8, 0)) + c5 * (xd8 - _current_state(9, 0));
 	s4 = (xd9_dot - _current_state(10, 0)) + c6 * (xd9 - _current_state(11, 0));
 
 
-	//cout << "s2: " << s2 << ", s3: " << s3 << ", s4: " << s4 << "\n";
-
-	u_control(1, 0) = (1 / b1) * (k7 * sat(s2) + k8 * s2 + xd7_ddot - a1 * _current_state(8, 0) * _current_state(10, 0) + c4 * (xd7_dot - _current_state(6, 0))); //roll
-	u_control(2, 0) = (1 / b2) * (k9 * sat(s3) + k10 * s3 + xd8_ddot - a2 * _current_state(6, 0) * _current_state(10, 0) + c5 * (xd8_dot - _current_state(8, 0))); //pitch
-	u_control(3, 0) = (1 / b3) * (k11 * sat(s4) + k12 * s4 + xd9_ddot - a3 * _current_state(6, 0) * _current_state(8, 0) + c6 * (xd9_dot - _current_state(10, 0))); //yaw
-
-
-
-
-
+	//Sliding Mode Control 
+	u_control(0, 0) = -(m / (cos(_current_state(7, 0)) * cos(_current_state(9, 0)))) * (k1 * sat(s1) + k2 * s1 + g + c1 * (_eq_point(4, 0) - _current_state(4, 0)));
+	u_control(1, 0) = (1/b1) * (-((a1 * _current_state(10, 0) * _current_state(8, 0)) + 5 * _current_state(6, 0)) - 1 * sat(s2)); //roll
+	u_control(2, 0) = (1/b2) * (-((a2 * _current_state(10, 0) * _current_state(6, 0)) + 5 * _current_state(8, 0)) - 1 * sat(s3)); //pitch
+	u_control(3, 0) = (1/b3) * (-((a3 * _current_state(10, 0) * _current_state(8, 0)) + 5 * _current_state(10, 0)) - 1 * sat(s4)); //yaw
 
 
 	//-----------------------------------------------------------------------------------------
@@ -421,7 +471,6 @@ void QuadrotorLQRControl::setEquilibriumPoint(Matrix<float, 12, 1> eqPoint)
 
 
 
-
 }
 
 void QuadrotorLQRControl::setAutoEqPointFlag(bool flag)
@@ -528,22 +577,22 @@ float QuadrotorLQRControl::sat(float s)
 Matrix<float, 3, 1> QuadrotorLQRControl::generateRef(float time)
 {
 	//cout << "time ref:" << time << endl; 
-	float r = 2;
+	float r = 8;
 	float h = 10;
 
-	float time_stop = 10;
+	float time_stop = 4;
 
 	if (time < time_stop) {
-		_ref_points(0, 0) = -1;
-		_ref_points(1, 0) = -1;
+		_ref_points(0, 0) = 0;
+		_ref_points(1, 0) = 0;
 		_ref_points(2, 0) = -1;
 
 		cout << "rising" << endl;
 	}
 	else {
 		cout << "helix" << endl;
-		_ref_points(0, 0) = r * sin(time);
-		_ref_points(1, 0) = r * cos(time);
+		_ref_points(0, 0) = r * cos(time_constant*(time-time_stop)) - r;
+		_ref_points(1, 0) = r * sin(time_constant*(time-time_stop));
 		_ref_points(2, 0) = -(1/ time_stop) * time;
 
 	}

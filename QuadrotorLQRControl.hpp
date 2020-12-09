@@ -76,6 +76,10 @@ private:
 
 	Matrix<float, 3, 1> _ref_points;
 
+	Matrix<float, 3, 1> _t_norm;
+
+	Matrix<float, 3, 1> _t; 
+
 
 	bool _auto_eq_point_flag;
 
@@ -177,6 +181,27 @@ private:
 	float c6 = 0.5;
 	float k11 = 0.5;
 	float k12 = 0.5;
+
+	// MATLAB - Implementation
+
+	float psi_des; 
+
+	float Kdx = 30;
+	float Kdy = 10;
+	float Kdz = 4;
+
+	float Kpx = 20;
+	float Kpy = 10;
+	float Kpz = 4; 
+
+	float ddxc;
+	float ddyc;
+	float ddzc;
+
+	float time_constant = 0.05;
+
+
+
 
 
 	void writeStateOnFile(const char* filename, Matrix <float, 12, 1> vect, hrt_abstime t);
